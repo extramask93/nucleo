@@ -38,6 +38,7 @@
 "Src/adc.o"
 "Src/am2302.o"
 "Src/battery.o"
+"Src/co2.o"
 "Src/gpio.o"
 "Src/i2c.o"
 "Src/lcd.o"

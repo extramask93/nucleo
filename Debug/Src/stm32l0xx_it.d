@@ -38,7 +38,8 @@ Src/stm32l0xx_it.o: ../Src/stm32l0xx_it.c \
  C:/STM32Toolchain/Nucleo/Drivers/freemodbus/port/port.h \
  C:/STM32Toolchain/Nucleo/Drivers/freemodbus/modbus/include/mbport.h \
  C:/STM32Toolchain/Nucleo/Drivers/freemodbus/modbus/include/mbproto.h \
- C:/STM32Toolchain/Nucleo/Drivers/freemodbus/modbus/include/mbport.h
+ C:/STM32Toolchain/Nucleo/Drivers/freemodbus/modbus/include/mbport.h \
+ C:/STM32Toolchain/Nucleo/Inc/tim.h
 
 C:/STM32Toolchain/Nucleo/Drivers/STM32L0xx_HAL_Driver/Inc/stm32l0xx_hal.h:
 
@@ -119,3 +120,5 @@ C:/STM32Toolchain/Nucleo/Drivers/freemodbus/modbus/include/mbport.h:
 C:/STM32Toolchain/Nucleo/Drivers/freemodbus/modbus/include/mbproto.h:
 
 C:/STM32Toolchain/Nucleo/Drivers/freemodbus/modbus/include/mbport.h:
+
+C:/STM32Toolchain/Nucleo/Inc/tim.h:

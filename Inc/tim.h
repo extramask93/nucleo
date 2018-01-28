@@ -67,6 +67,7 @@ void MX_TIM22_Init(void);
 
 /* USER CODE BEGIN Prototypes */
 void StartSTOPTimer();
+void ResetSTOPTimer();
 /* USER CODE END Prototypes */
 
 #ifdef __cplusplus

@@ -60,10 +60,12 @@ static void am2302_getHumidity(TH_Data *data) {
 }
 void am2302_Init() {
 	MX_TIM2_Init();
+	HAL_GPIO_WritePin(AM_PWR_GPIO_Port,AM_PWR_Pin,GPIO_PIN_SET);
 	am2302_pinOut();
 }
 void am2302_DeIninit() {
-	MX_TIM2_DeInit();
+	//MX_TIM2_DeInit();
+	HAL_GPIO_WritePin(AM_PWR_GPIO_Port,AM_PWR_Pin,GPIO_PIN_RESET);
 }
 int am2302_ReadData(TH_Data *result) {
 	memset(am2302Data,0x0,4); //reset

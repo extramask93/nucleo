@@ -20,16 +20,20 @@ extern volatile bool STOPRequested;
  * @brief Send information to the LCD using configured GPIOs
  * @param val: value to be sent
  */
+static void LCD_Power_Down() {
+	LCD_write(LCD_DISPLAY_POWER_DOWN, LCD_COMMAND);
+}
 void LCD_Off() {
-	HAL_GPIO_WritePin(GPIOB,LCD_PWR_Pin,GPIO_PIN_SET);
-	HAL_GPIO_WritePin(GPIOB,LCD_LED_PWR_Pin,GPIO_PIN_SET);
+HAL_GPIO_WritePin(GPIOB,GPIO_PIN_4,GPIO_PIN_SET);
+LCD_Power_Down();
 	HAL_SPI_MspDeInit(&hspi1);
 }
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 	if(htim->Instance == TIM6) {
 		cnt++;
-		if(cnt==6) {
-			LCD_clrScr();
+		if(cnt>=6) {
+			LCD_Off();
+			am2302_DeIninit();
 			STOPRequested=true;
 			HAL_TIM_Base_Stop_IT(htim);
 		}
@@ -78,18 +82,8 @@ void LCD_init(){
 	lcd_gpio.CEPIN = LCD_PIN_CE;
 	lcd_gpio.DCPORT = LCD_PORT_DC;
 	lcd_gpio.DCPIN = LCD_PIN_DC;
-	/*HAL_GPIO_WritePin(GPIOB, LCD_PWR_Pin|LCD_LED_PWR_Pin, GPIO_PIN_SET);
-	__HAL_RCC_GPIOA_CLK_ENABLE();
-	__HAL_RCC_GPIOB_CLK_ENABLE();
-	GPIO_InitStruct.Pin = CE_Pin|DC_Pin|RST_Pin;
-	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-	HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-	GPIO_InitStruct.Pin = LCD_PWR_Pin|LCD_LED_PWR_Pin;
-	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-	HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);*/
 	MX_SPI1_Init();
+	HAL_GPIO_WritePin(GPIOB,GPIO_PIN_4,GPIO_PIN_RESET);
 	LCD_Reset();
 	LCD_write(0x21, LCD_COMMAND); //LCD extended commands.
 	LCD_write(0xB8, LCD_COMMAND); //set LCD Vop(Contrast).

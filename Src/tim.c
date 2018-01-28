@@ -41,7 +41,7 @@
 #include "tim.h"
 
 /* USER CODE BEGIN 0 */
-
+extern volatile int cnt;
 /* USER CODE END 0 */
 
 TIM_HandleTypeDef htim2;
@@ -223,14 +223,16 @@ void HAL_TIM_Base_MspDeInit(TIM_HandleTypeDef* tim_baseHandle)
 
 /* USER CODE BEGIN 1 */
 void StartSTOPTimer() {
-	if(htim6.State == HAL_TIM_STATE_READY) {
-		htim6.Instance->CNT=0;
-	}
-	else {
+	if(htim6.State != HAL_TIM_STATE_READY) {
 		MX_TIM6_Init();
 		htim6.Instance->CNT=0;
+		cnt=0;
 		HAL_TIM_Base_Start_IT(&htim6);
 	}
+}
+inline void ResetSTOPTimer() {
+	htim6.Instance->CNT=0;
+	cnt=0;
 }
 /* USER CODE END 1 */
 

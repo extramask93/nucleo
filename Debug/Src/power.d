@@ -41,7 +41,8 @@ Src/power.o: ../Src/power.c C:/STM32Toolchain/Nucleo/Inc/power.h \
  C:/STM32Toolchain/Nucleo/Drivers/freemodbus/modbus/include/mb.h \
  C:/STM32Toolchain/Nucleo/Drivers/freemodbus/port/port.h \
  C:/STM32Toolchain/Nucleo/Drivers/freemodbus/modbus/include/mbport.h \
- C:/STM32Toolchain/Nucleo/Drivers/freemodbus/modbus/include/mbproto.h
+ C:/STM32Toolchain/Nucleo/Drivers/freemodbus/modbus/include/mbproto.h \
+ C:/STM32Toolchain/Nucleo/Inc/rtc.h
 
 C:/STM32Toolchain/Nucleo/Inc/power.h:
 
@@ -136,3 +137,5 @@ C:/STM32Toolchain/Nucleo/Drivers/freemodbus/port/port.h:
 C:/STM32Toolchain/Nucleo/Drivers/freemodbus/modbus/include/mbport.h:
 
 C:/STM32Toolchain/Nucleo/Drivers/freemodbus/modbus/include/mbproto.h:
+
+C:/STM32Toolchain/Nucleo/Inc/rtc.h:

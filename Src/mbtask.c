@@ -23,12 +23,30 @@
 #include "power.h"
 #include <stdio.h>
 #include <stdbool.h>
-
+/*
+ Rules for co2 timer:
+ if(czas <=2min)
+ 	 always_on;
+ 	 sleep();
+ if(czas > 2min)
+ 	 set_timer_for(czas-2min);
+ 	 sleep();
+ after wake up:
+ 	 readCo2();
+ 	 turnOffCo2()
+ 	 readSensors();
+ 	 restert timer();
+ 	 sleep();
+ */
 #define REG_INPUT_START 1001
 #define REG_INPUT_NREGS 8
+#define REG_HOLD_START 0
+#define REG_HOLD_NREGS 8
+
 extern Calibration_t lastCalibrated;
 static USHORT usRegInputStart = REG_INPUT_START;
 static USHORT usRegInputBuf[REG_INPUT_NREGS];
+static uint32_t * holdingRegMem = (uint32_t*)(0x080800000);
 static char bufferT[14];
 static char bufferH[14];
 static char bufferLX[14];
@@ -42,7 +60,7 @@ extern volatile int cnt;
 volatile bool STOPRequested =0;
 volatile bool calibrationRequested=false;
 volatile bool lcdPrintRequested =false;
-volatile bool measurementRequested =true;
+volatile bool measurementRequested = false;
 volatile int LCD_request = 0;
 
 
@@ -50,24 +68,26 @@ void ModbusRTUTask(void const * argument)
 {
 	eMBInit(MB_RTU, 1, 3, 9600, MB_PAR_NONE);
 	eMBEnable();
+	MeasureAll();
 	StopMode();
   while(1) {
     eMBPoll();
+    StartSTOPTimer();
     if(measurementRequested) {
+    	ResetSTOPTimer();
     	MeasureAll();
+    	ReloadRTC();
     	measurementRequested = false;
-    	STOPRequested = true;
     }
     if(lcdPrintRequested) {
-    	MeasureAll();
+    	ResetSTOPTimer();
     	ReloadRTC();
     	PrintOnLCD();
     	lcdPrintRequested=0;
-    	StartSTOPTimer();
     }
     if(calibrationRequested) {
+    	ResetSTOPTimer();
     	ReadCalibrationData();
-    	StartSTOPTimer();
     	calibrationRequested=false;
     }
     if(STOPRequested) {
@@ -109,9 +129,45 @@ eMBErrorCode
 eMBRegHoldingCB( UCHAR * pucRegBuffer, USHORT usAddress, USHORT usNRegs,
                  eMBRegisterMode eMode )
 {
-    return MB_ENOREG;
-}
+	eMBErrorCode    eStatus = MB_ENOERR;
+	if(eMode==MB_REG_WRITE) {
+	    if( ( usAddress >= REG_HOLD_START )
+	        && ( usAddress + usNRegs <= REG_HOLD_START+ REG_HOLD_NREGS ))
+	    {
+	    	while(usNRegs>0) {
+	    	HAL_FLASHEx_DATAEEPROM_Unlock();
+	    	HAL_FLASHEx_DATAEEPROM_Erase(0x08080000);/*erase only available by word*/
+	    	unsigned int h = *pucRegBuffer++;
+	    	unsigned int l = *pucRegBuffer++;
+	    	unsigned int a = (h <<8) | (l&0xFF);
+	    	HAL_FLASHEx_DATAEEPROM_Program(FLASH_TYPEPROGRAMDATA_HALFWORD,0x08080000+(usAddress*4),a);
+	    	usAddress++;
+	    	usNRegs--;
+	    	}
+	    	HAL_FLASHEx_DATAEEPROM_Lock();
+	    }
+	    else
+	    	return MB_ENOREG;
+	}
+	if(eMode == MB_REG_READ) {
+	    if( ( usAddress >= REG_HOLD_START )
+	        && ( usAddress + usNRegs <= REG_HOLD_START+ REG_HOLD_NREGS ))
+	    {
+	    	uint32_t *mem = (uint32_t*)(0x08080000);
+	    	mem += usAddress;
+	    	while(usNRegs>0) {
+	    		*pucRegBuffer++ = (unsigned char)((*mem) >>8);
+	    		*pucRegBuffer++ = (unsigned char)((*mem) & 0xFF);
+	    		mem++;
+	    		usNRegs--;
+	    	}
+	    }
+	    else
+	    	return MB_ENOREG;
+	}
 
+    return eStatus;
+}
 
 eMBErrorCode
 eMBRegCoilsCB( UCHAR * pucRegBuffer, USHORT usAddress, USHORT usNCoils,
@@ -173,18 +229,7 @@ void MeasureAll() {
 	BatteryInit();
 	usRegInputBuf[4] = ReadBatteryValue();
 }
-void SaveConfiguration() {
-	uint32_t errorCode=0;
-	FLASH_EraseInitTypeDef FLASH_EraseTypeDef;
-	FLASH_EraseTypeDef.PageAddress = 0x0801FC00; //last page
-	FLASH_EraseTypeDef.NbPages = 1;
-	FLASH_EraseTypeDef.TypeErase = FLASH_TYPEERASE_PAGES;
-	HAL_FLASH_Unlock();
-	HAL_FLASHEx_Erase(&FLASH_EraseTypeDef,&errorCode);
-	HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD,0x801FC00,(666>>0)& 0xF); //save 666 to address
-	HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD,0x801FC01,(666>>8)&0xF); //save 666 to address
-	HAL_FLASH_Lock();
-}
+
 void PrintOnLCD() {
 	LCD_init();
 	LCD_clrScr();

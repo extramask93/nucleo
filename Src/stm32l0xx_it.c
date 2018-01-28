@@ -38,6 +38,7 @@
 /* USER CODE BEGIN 0 */
 #include "mb.h"
 #include "mbport.h"
+#include "tim.h"
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/
@@ -150,37 +151,20 @@ void AES_RNG_LPUART1_IRQHandler(void)
   /* USER CODE BEGIN AES_RNG_LPUART1_IRQn 0 */
 	uint32_t tmp_flag = __HAL_UART_GET_FLAG(&hlpuart1, UART_FLAG_RXNE);
 	uint32_t tmp_it_source = __HAL_UART_GET_IT_SOURCE(&hlpuart1, UART_IT_RXNE);
-	uint32_t tmp_flag1 = __HAL_UART_GET_FLAG(&hlpuart1, UART_FLAG_WUF);
-	uint32_t tmp_it_source1 = __HAL_UART_GET_IT_SOURCE(&hlpuart1, UART_IT_WUF);
 	if((tmp_flag != RESET) && (tmp_it_source != RESET)) {
-		pxMBFrameCBByteReceived();
-		__HAL_UART_CLEAR_PEFLAG(&hlpuart1);
-		return; }
-	if((tmp_flag1 != RESET) && (tmp_it_source1 != RESET)) {
 		pxMBFrameCBByteReceived();
 		__HAL_UART_CLEAR_PEFLAG(&hlpuart1);
 		return; }
 	if((__HAL_UART_GET_FLAG(&hlpuart1, UART_FLAG_TXE) != RESET) &&(__HAL_UART_GET_IT_SOURCE(&hlpuart1, UART_IT_TXE) != RESET)) {
 		pxMBFrameCBTransmitterEmpty();
 		}
+	ResetSTOPTimer();
   /* USER CODE END AES_RNG_LPUART1_IRQn 0 */
-  HAL_UART_IRQHandler(&hlpuart1);
   /* USER CODE BEGIN AES_RNG_LPUART1_IRQn 1 */
 
   /* USER CODE END AES_RNG_LPUART1_IRQn 1 */
 }
-void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart) {
-	switch(huart->ErrorCode) {
-	case HAL_UART_ERROR_ORE:
-		break;
-	case HAL_UART_ERROR_FE:
-		break;
-	case HAL_UART_ERROR_NE:
-		break;
-	default:
-		break;
-	}
-}
+
 /* USER CODE BEGIN 1 */
 
 /* USER CODE END 1 */

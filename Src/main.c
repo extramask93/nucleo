@@ -111,7 +111,10 @@ int main(void)
   am2302_Init();
   BV_Init();
   SoilInit();
-	HAL_GPIO_WritePin(LD2_GPIO_Port,LD2_Pin,GPIO_PIN_SET);
+  HAL_GPIO_WritePin(LD2_GPIO_Port,LD2_Pin,GPIO_PIN_SET);
+  HAL_GPIO_WritePin(GPIOB,GPIO_PIN_4,GPIO_PIN_RESET);
+  HAL_Delay(50);
+  HAL_GPIO_WritePin(GPIOB,GPIO_PIN_4,GPIO_PIN_SET);
   /* USER CODE END 2 */
 
   /* Infinite loop */
