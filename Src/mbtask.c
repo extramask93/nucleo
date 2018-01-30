@@ -42,11 +42,15 @@
 #define REG_INPUT_NREGS 8
 #define REG_HOLD_START 0
 #define REG_HOLD_NREGS 8
+#define COIL_START 2000
+#define COIL_NREGS 12
+
 
 extern Calibration_t lastCalibrated;
 static USHORT usRegInputStart = REG_INPUT_START;
 static USHORT usRegInputBuf[REG_INPUT_NREGS];
 static uint32_t * holdingRegMem = (uint32_t*)(0x080800000);
+uint8_t coils[COIL_NREGS];
 static char bufferT[14];
 static char bufferH[14];
 static char bufferLX[14];
@@ -173,7 +177,51 @@ eMBErrorCode
 eMBRegCoilsCB( UCHAR * pucRegBuffer, USHORT usAddress, USHORT usNCoils,
                eMBRegisterMode eMode )
 {
-    return MB_ENOREG;
+	eMBErrorCode    eStatus = MB_ENOERR;
+	int iRegIndex;
+	int shift=0;
+	iRegIndex = ( int )( usAddress - COIL_START );
+
+	if(eMode == MB_REG_WRITE) {
+		/*write measurements coils*/
+		unsigned reg = *pucRegBuffer++;
+		if(usNCoils>8)
+			reg |= ((*pucRegBuffer)<<8) & 0xFF00;
+
+		if( ( usAddress >= COIL_START )
+		   && ( usAddress + usNCoils <= COIL_START+ COIL_NREGS )) {
+			while(usNCoils>0) {
+				if(((reg>>shift)&0x1))
+					coils[iRegIndex] = 1;
+				else
+					coils[iRegIndex] = 0;
+				iRegIndex++;
+				shift++;
+				usNCoils--;
+			}
+		}
+		else
+			return MB_ENOREG;
+	}
+	else if(eMode == MB_REG_READ) {
+		if( ( usAddress >= COIL_START )
+		   && ( usAddress + usNCoils <= COIL_START+ COIL_NREGS )) {
+			*pucRegBuffer=0;
+			while(usNCoils>0) {
+				if(shift>8) {
+					shift=0;
+					pucRegBuffer++; *pucRegBuffer=0;
+				}
+				*pucRegBuffer |= coils[iRegIndex]<<shift;
+				++iRegIndex;
+				++shift;
+				--usNCoils;
+			}
+		}
+		else
+			return MB_ENOREG;
+	}
+    return eStatus;
 }
 
 eMBErrorCode
