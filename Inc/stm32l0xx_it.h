@@ -45,12 +45,17 @@
 /* Exported macro ------------------------------------------------------------*/
 /* Exported functions ------------------------------------------------------- */
 
+void SVC_Handler(void);
+void PendSV_Handler(void);
 void SysTick_Handler(void);
 void RTC_IRQHandler(void);
 void EXTI0_1_IRQHandler(void);
 void EXTI4_15_IRQHandler(void);
+void ADC1_COMP_IRQHandler(void);
+void TIM2_IRQHandler(void);
 void TIM6_DAC_IRQHandler(void);
 void TIM22_IRQHandler(void);
+void USART1_IRQHandler(void);
 void AES_RNG_LPUART1_IRQHandler(void);
 
 #ifdef __cplusplus

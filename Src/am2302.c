@@ -9,10 +9,10 @@
 #include <string.h>
 #include "i2c.h"
 #include "tim.h"
+#include "tim.h"
 
-int8_t am2302Data[4];
+uint8_t am2302Data[5];
 volatile int timeOutFlag;
-extern TIM_HandleTypeDef htim2;
 
 static void am2302_pinOut() {
 	  GPIO_InitTypeDef GPIO_InitStruct;
@@ -58,17 +58,23 @@ static void am2302_getHumidity(TH_Data *data) {
 	  data->ihumidity=retVal;
 	  data->humidity = humidity;
 }
+static int am2302_checkParity() {
+	uint8_t parity = am2302Data[0]+am2302Data[1]+am2302Data[2]+am2302Data[3];
+	if(parity!=am2302Data[4])
+		return 1;
+	return 0;
+}
 void am2302_Init() {
-	MX_TIM2_Init();
-	HAL_GPIO_WritePin(AM_PWR_GPIO_Port,AM_PWR_Pin,GPIO_PIN_SET);
+	MX_TIM21_Init();//MX_TIM2_Init();
 	am2302_pinOut();
 }
 void am2302_DeIninit() {
-	//MX_TIM2_DeInit();
-	HAL_GPIO_WritePin(AM_PWR_GPIO_Port,AM_PWR_Pin,GPIO_PIN_RESET);
+	HAL_TIM_Base_MspDeInit(&htim21);//HAL_TIM_Base_MspDeInit(&htim2);
+	htim21.State = HAL_TIM_STATE_RESET;
+	//HAL_GPIO_DeInit(TMP_GPIO_Port, TMP_Pin);
 }
 int am2302_ReadData(TH_Data *result) {
-	memset(am2302Data,0x0,4); //reset
+	memset(am2302Data,0x0,5); //reset
 	timeOutFlag=0;
 	int currentByte=0;
 	int counter = 7;
@@ -76,19 +82,19 @@ int am2302_ReadData(TH_Data *result) {
 	HAL_GPIO_WritePin(TMP_GPIO_Port,TMP_Pin,GPIO_PIN_RESET);
 	HAL_Delay(1);//start -> data line for 1ms down
 	am2302_pinInput();
-	HAL_TIM_Base_Start(&htim2);
-	TIM2->CNT = 0;
-	while(HAL_GPIO_ReadPin(TMP_GPIO_Port,TMP_Pin)){ if(TIM2->CNT>500) return 1;}
-	TIM2->CNT = 0;
-	while(!HAL_GPIO_ReadPin(TMP_GPIO_Port,TMP_Pin)){ if(TIM2->CNT>500) return 1;}
-	TIM2->CNT = 0;
-	while(HAL_GPIO_ReadPin(TMP_GPIO_Port,TMP_Pin)){ if(TIM2->CNT>500) return 1;}
+	HAL_TIM_Base_Start(&htim21);
+	TIM21->CNT=0;//TIM2->CNT = 0;
+	while(HAL_GPIO_ReadPin(TMP_GPIO_Port,TMP_Pin)){ if(TIM21->CNT>500) return 1;}
+	TIM21->CNT = 0;
+	while(!HAL_GPIO_ReadPin(TMP_GPIO_Port,TMP_Pin)){ if(TIM21->CNT>500) return 1;}
+	TIM21->CNT = 0;
+	while(HAL_GPIO_ReadPin(TMP_GPIO_Port,TMP_Pin)){ if(TIM21->CNT>500) return 1;}
 	for(int i=0;i<40;i++) { //receieve 40 bits
-		TIM2->CNT = 0;
-		while(!HAL_GPIO_ReadPin(TMP_GPIO_Port,TMP_Pin)){ if(TIM2->CNT>500) return 1;}
-		uint32_t time = TIM2->CNT;
-		while(HAL_GPIO_ReadPin(TMP_GPIO_Port,TMP_Pin)){ if(TIM2->CNT>500) return 1;}
-		if((TIM2->CNT - time) >30) {
+		TIM21->CNT = 0;
+		while(!HAL_GPIO_ReadPin(TMP_GPIO_Port,TMP_Pin)){ if(TIM21->CNT>500) return 1;}
+		uint32_t time = TIM21->CNT;
+		while(HAL_GPIO_ReadPin(TMP_GPIO_Port,TMP_Pin)){ if(TIM21->CNT>500) return 1;}
+		if((TIM21->CNT- time) >30) {
 			am2302Data[currentByte] |= (1 << counter);
 		}
 		if(counter == 0) {
@@ -99,7 +105,9 @@ int am2302_ReadData(TH_Data *result) {
 			counter--;
 		}
 	}
-	HAL_TIM_Base_Stop(&htim2);
+	if(am2302_checkParity())
+		return 1;
+	HAL_TIM_Base_Stop(&htim21);
 	am2302_getTemperature(result);
 	am2302_getHumidity(result);
 	return 0;

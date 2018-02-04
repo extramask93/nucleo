@@ -97,16 +97,4 @@ static void prvvUARTRxISR( void )
 {
     pxMBFrameCBByteReceived(  );
 }
-void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart) {
-//	if(huart == LPUART1) {
-//		pxMBFrameCBTransmitterEmpty();
-//
-//	}
-//	StartSTOPTimer();
-}
-void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
-//	if(huart == LPUART1) {
-//		pxMBFrameCBByteReceived();
-//	}
-//	StartSTOPTimer();
-}
+

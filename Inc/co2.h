@@ -8,12 +8,13 @@
 #ifndef CO2_H_
 #define CO2_H_
 #include <stdint.h>
+enum ErrorType {
+	CO2_OK, CO2_TRERROR, CO2_REERROR,CO2_CHERROR
+};
 void CO2_Init();
 void CO2_DeInit();
-uint16_t CO2_GetConcentration();
-uint16_t CO2_CalibrateZeroPoint();
-uint16_t CO2_CalibrateSpanPoint();
-void CO2_TurnOffAutoCalibration();
+enum ErrorType CO2_GetConcentration(uint16_t *result);
+
 
 
 #endif /* CO2_H_ */

@@ -39,6 +39,7 @@
 #include "main.h"
 #include "stm32l0xx_hal.h"
 #include "adc.h"
+#include "comp.h"
 #include "i2c.h"
 #include "usart.h"
 #include "rtc.h"
@@ -51,6 +52,7 @@
 #include "BV1750FVI.h"
 #include "am2302.h"
 #include "mbtask.h"
+#include <math.h>
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -99,22 +101,24 @@ int main(void)
   MX_GPIO_Init();
   MX_LPUART1_UART_Init();
   MX_RTC_Init();
-  MX_SPI1_Init();
-  MX_I2C1_Init();
   MX_ADC_Init();
   MX_TIM6_Init();
   MX_TIM2_Init();
   MX_TIM22_Init();
+  MX_COMP2_Init();
+  MX_TIM21_Init();
+  MX_SPI1_Init();
+  MX_USART1_UART_Init();
+  MX_I2C1_Init();
+
 
   /* USER CODE BEGIN 2 */
-  LCD_init();
-  am2302_Init();
   BV_Init();
-  SoilInit();
   HAL_GPIO_WritePin(LD2_GPIO_Port,LD2_Pin,GPIO_PIN_SET);
-  HAL_GPIO_WritePin(GPIOB,GPIO_PIN_4,GPIO_PIN_RESET);
-  HAL_Delay(50);
-  HAL_GPIO_WritePin(GPIOB,GPIO_PIN_4,GPIO_PIN_SET);
+  LCD_init();
+  RTC_TimeTypeDef sTimeStamp;
+  RTC_DateTypeDef date;
+  char buffer[20];
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -124,7 +128,12 @@ int main(void)
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
-	  ModbusRTUTask("asd");
+	  HAL_RTC_GetTime(&hrtc,&sTimeStamp,RTC_FORMAT_BIN);
+	  HAL_RTC_GetDate(&hrtc,&date,RTC_FORMAT_BIN);
+	  sprintf(buffer,"H:%i M:%i S:%i", sTimeStamp.Hours, sTimeStamp.Minutes, sTimeStamp.Seconds);
+	  LCD_print(buffer,0,0);
+	  HAL_Delay(1000);
+	 //ModbusRTUTask("asd");
   }
   /* USER CODE END 3 */
 
@@ -173,8 +182,9 @@ void SystemClock_Config(void)
     _Error_Handler(__FILE__, __LINE__);
   }
 
-  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_LPUART1|RCC_PERIPHCLK_I2C1
-                              |RCC_PERIPHCLK_RTC;
+  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USART1|RCC_PERIPHCLK_LPUART1
+                              |RCC_PERIPHCLK_I2C1|RCC_PERIPHCLK_RTC;
+  PeriphClkInit.Usart1ClockSelection = RCC_USART1CLKSOURCE_PCLK2;
   PeriphClkInit.Lpuart1ClockSelection = RCC_LPUART1CLKSOURCE_LSE;
   PeriphClkInit.I2c1ClockSelection = RCC_I2C1CLKSOURCE_PCLK1;
   PeriphClkInit.RTCClockSelection = RCC_RTCCLKSOURCE_LSE;

@@ -23,12 +23,12 @@
 #define LCD_DISPLAY_INVERTED 0x0D
 #define LCD_DISPLAY_POWER_DOWN 0x24
 
-#define LCD_PORT_RST RST_GPIO_Port
-#define LCD_PIN_RST RST_Pin
-#define LCD_PORT_CE CE_GPIO_Port
-#define LCD_PIN_CE CE_Pin
-#define LCD_PORT_DC DC_GPIO_Port
-#define LCD_PIN_DC DC_Pin
+#define LCD_PORT_RST LCD_RST_GPIO_Port
+#define LCD_PIN_RST LCD_RST_Pin
+#define LCD_PORT_CE LCD_CE_GPIO_Port
+#define LCD_PIN_CE LCD_CE_Pin
+#define LCD_PORT_DC LCD_DC_GPIO_Port
+#define LCD_PIN_DC LCD_DC_Pin
 
 
 #define LCD_WIDTH 84

@@ -10,6 +10,7 @@ C_SRCS += \
 ../Src/am2302.c \
 ../Src/battery.c \
 ../Src/co2.c \
+../Src/comp.c \
 ../Src/gpio.c \
 ../Src/i2c.c \
 ../Src/lcd.c \
@@ -31,6 +32,7 @@ OBJS += \
 ./Src/am2302.o \
 ./Src/battery.o \
 ./Src/co2.o \
+./Src/comp.o \
 ./Src/gpio.o \
 ./Src/i2c.o \
 ./Src/lcd.o \
@@ -52,6 +54,7 @@ C_DEPS += \
 ./Src/am2302.d \
 ./Src/battery.d \
 ./Src/co2.d \
+./Src/comp.d \
 ./Src/gpio.d \
 ./Src/i2c.d \
 ./Src/lcd.d \

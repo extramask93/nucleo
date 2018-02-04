@@ -34,31 +34,7 @@ uint16_t downcounter = 0;
 BOOL
 xMBPortTimersInit( USHORT usTim1Timerout50us )
 {
-	  TIM_ClockConfigTypeDef sClockSourceConfig;
-	  TIM_MasterConfigTypeDef sMasterConfig;
-
-	  htim22.Instance = TIM22;
-	  htim22.Init.Prescaler = 8;
-	  htim22.Init.CounterMode = TIM_COUNTERMODE_UP;
-	  htim22.Init.Period = 49;
-	  htim22.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-	  if (HAL_TIM_Base_Init(&htim22) != HAL_OK)
-	  {
-	    _Error_Handler(__FILE__, __LINE__);
-	  }
-
-	  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
-	  if (HAL_TIM_ConfigClockSource(&htim22, &sClockSourceConfig) != HAL_OK)
-	  {
-	    _Error_Handler(__FILE__, __LINE__);
-	  }
-
-	  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
-	  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
-	  if (HAL_TIMEx_MasterConfigSynchronization(&htim22, &sMasterConfig) != HAL_OK)
-	  {
-	    _Error_Handler(__FILE__, __LINE__);
-	  }
+	MX_TIM6_Init();
 	timeout = usTim1Timerout50us;
 	return TRUE;
 }
@@ -69,17 +45,17 @@ vMBPortTimersEnable(  )
 {
 	SystemClock_Config();
 	HAL_ResumeTick();
-	htim22.State = HAL_UART_STATE_RESET;
-	MX_TIM22_Init();
+	htim6.State = HAL_UART_STATE_RESET;
+	MX_TIM6_Init();
 	downcounter = timeout;
-	HAL_TIM_Base_Start_IT(&htim22);
+	HAL_TIM_Base_Start_IT(&htim6);
     /* Enable the timer with the timeout passed to xMBPortTimersInit( ) */
 }
 
 inline void
 vMBPortTimersDisable(  )
 {
-	HAL_TIM_Base_Stop_IT(&htim22);
+	HAL_TIM_Base_Stop_IT(&htim6);
     /* Disable any pending timers. */
 }
 

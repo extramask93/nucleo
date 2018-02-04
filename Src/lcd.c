@@ -10,6 +10,7 @@
 #include <stdint.h>
 #include "port.h"
 #include "mb.h"
+#include "tim.h"
 #include "mbport.h"
 struct LCD_att lcd;
 struct LCD_GPIO lcd_gpio;
@@ -20,25 +21,46 @@ extern volatile bool STOPRequested;
  * @brief Send information to the LCD using configured GPIOs
  * @param val: value to be sent
  */
+static void LCD_AdjustBrightness()
+{
+    //fprintf(lcd, "adc: %d\n", (int)adc_read());
+    //fprintf(lcd, "bv: %d\n", (int)targetBrightness);
+
+    uint16_t lightVal=0;
+    BV_ReadData(&lightVal);
+    //HAL_Delay(250);
+    uint16_t percentage = 0;
+    if(lightVal==0)
+    	lightVal=1;
+    if(lightVal<1254)
+    	percentage = 9.9323*log2(lightVal)+27;
+    else
+    	percentage=100;
+    uint16_t pwm = (percentage-10);
+    __HAL_TIM_SET_COMPARE(&htim22, TIM_CHANNEL_1, pwm);
+
+
+}
 static void LCD_Power_Down() {
 	LCD_write(LCD_DISPLAY_POWER_DOWN, LCD_COMMAND);
 }
 void LCD_Off() {
-HAL_GPIO_WritePin(GPIOB,GPIO_PIN_4,GPIO_PIN_SET);
-LCD_Power_Down();
+	HAL_TIM_PWM_Stop(&htim22,TIM_CHANNEL_1);
+	HAL_TIM_Base_DeInit(&htim22);
+	LCD_Power_Down();
 	HAL_SPI_MspDeInit(&hspi1);
 }
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
-	if(htim->Instance == TIM6) {
+	if(htim->Instance == TIM2) {
 		cnt++;
 		if(cnt>=6) {
 			LCD_Off();
 			am2302_DeIninit();
 			STOPRequested=true;
-			HAL_TIM_Base_Stop_IT(htim);
+			HAL_TIM_Base_Stop_IT(&htim2);
 		}
 	}
-	else if(htim->Instance == TIM22) {
+	else if(htim->Instance == TIM6) {
 		if (!--downcounter)
 			pxMBPortCBTimerExpired();
 	}
@@ -75,6 +97,9 @@ void LCD_write(uint8_t data, uint8_t mode){
  * @brief Initialize the LCD using predetermined values
  */
 void LCD_init(){
+	MX_TIM22_Init();
+	HAL_TIM_PWM_Start(&htim22, TIM_CHANNEL_1);
+	LCD_AdjustBrightness();
 	GPIO_InitTypeDef GPIO_InitStruct;
 	lcd_gpio.RSTPORT = LCD_PORT_RST;
 	lcd_gpio.RSTPIN = LCD_PIN_RST;
@@ -86,7 +111,7 @@ void LCD_init(){
 	HAL_GPIO_WritePin(GPIOB,GPIO_PIN_4,GPIO_PIN_RESET);
 	LCD_Reset();
 	LCD_write(0x21, LCD_COMMAND); //LCD extended commands.
-	LCD_write(0xB8, LCD_COMMAND); //set LCD Vop(Contrast).
+	LCD_write(0xE0, LCD_COMMAND); //set LCD Vop(Contrast).
 	LCD_write(0x04, LCD_COMMAND); //set temp coefficent.
 	LCD_write(0x14, LCD_COMMAND); //LCD bias mode 1:40.
 	LCD_write(0x20, LCD_COMMAND); //LCD basic commands.

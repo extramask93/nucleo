@@ -6,9 +6,15 @@
  */
 
 #include "co2.h"
+#include "usart.h"
+#include "mbtask.h"
+#include "stm32l0xx_hal_uart.h"
+#define MAX_RESPONSE_SIZE 9
+uint8_t tab[] = {0xFF, 0x01, 0x86, 0x00,0x00,0x00,0x00,0x00,0x79};
+uint8_t temp[10];
 
-static char CO2_GetCheckSum(char * packet) {
-	char i,checksum;
+static uint8_t CO2_GetCheckSum(uint8_t * packet) {
+	uint8_t i,checksum;
 	for(i=1;i<8;i++) {
 		checksum += packet[i];
 	}
@@ -17,48 +23,33 @@ static char CO2_GetCheckSum(char * packet) {
 	return checksum;
 }
 void CO2_Init() {
-/*baud: 9600, data bits: 8, stop bits: 1, no parity*/
+	CO2_TurnOn();
+	MX_USART1_UART_Init();
 }
 void CO2_DeInit() {
-	;
+	if(!coils[11]) {
+		CO2_TurnOff();
+	}
+	HAL_UART_MspDeInit(&huart1);
+	huart1.gState = HAL_UART_STATE_RESET;
 }
-uint16_t CO2_GetConcentration() {
-	;
-	/*starting byte: 0xFF
-	sensor id: 0x01
-	command id: 0x86
-	5x byte: 0x00
-	check value byte: 0x79*/
-	/******************************/
-	/*RESPONSE*/
-	/*starting byte: 0xFF
-	command id: 0x86
-	4x byte: 0x00
-	check value byte: */
-	/*CALCULATION */
-	/*gas concetration = high byte *256 + low byte*/
+enum ErrorType CO2_GetConcentration(uint16_t *result) {
+	if(HAL_UART_Transmit(&huart1,tab,sizeof(tab),100))
+		return CO2_TRERROR;
+	if(HAL_UART_Receive(&huart1,temp,9,1000))
+		return CO2_REERROR;
+	if(CO2_GetCheckSum(temp)!= temp[8])
+		return CO2_CHERROR;
+	*result = temp[2]*256 + temp[3];
+	return CO2_OK;
 }
-uint16_t CO2_CalibrateZeroPoint() {
-	;/*starting byte: 0xFF
-	sensor id: 0x01
-	command id: 0x87
-	5x byte: 0x00
-	check value byte: 0x78*/
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
+
 }
-uint16_t CO2_CalibrateSpanPoint(){
-	;/*starting byte: 0xFF
-	sensor id: 0x01
-	command id: 0x88
-	higher byte span: 0x07
-	lower byte span: 0xD0
-	3x byte: 0x00
-	check value byte: 0x79*/
+inline void CO2_TurnOn() {
+	HAL_GPIO_WritePin(CO2_PWR_GPIO_Port,CO2_PWR_Pin,GPIO_PIN_SET);
 }
-void CO2_TurnOffAutoCalibration() {
-	;/*starting byte: 0xFF
-	sensor id: 0x01
-	command id: 0x79
-	turn_off: 0x00
-	4x byte: 0x00
-	check value byte: 0x79*/
+inline void CO2_TurnOff() {
+	if(!coils[11])
+		HAL_GPIO_WritePin(CO2_PWR_GPIO_Port,CO2_PWR_Pin,GPIO_PIN_RESET);
 }

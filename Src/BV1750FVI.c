@@ -16,23 +16,26 @@ void BV_Init() {
 	MX_I2C1_Init();
 }
 void BV_DeInit() {
-	MX_I2C1_DeInit();
+	HAL_I2C_MspDeInit(&hi2c1);
+	hi2c1.State   = HAL_I2C_STATE_RESET;
 }
 int BV_ReadData(uint16_t *value) {
-	uint8_t buffer[2], dataON, dataOTH,dataOFF,addr;
+	uint8_t buffer[2], dataON, dataOTH,addr;
 	volatile int result = 0;
 	*value =0;
 	memset(buffer,0x0,2);
 	dataON = BH1750FVI_ON;
 	dataOTH = BH1750FVI_OTH;
-	dataOFF = BH1750FVI_OFF;
 	addr = BH1750FVI_ADDR;
-	result = HAL_I2C_Master_Transmit(&hi2c1,addr,&dataON,1,100);
-	HAL_Delay(150);
-	result = HAL_I2C_Master_Transmit(&hi2c1,addr,&dataOTH,1,100);
-	HAL_Delay(150);
-	result = HAL_I2C_Master_Receive(&hi2c1,addr,buffer,2,100);
-	HAL_Delay(150);
+	result = HAL_I2C_Master_Transmit(&hi2c1,addr,&dataON,1,150);
+	if(result)
+		return result;
+	result = HAL_I2C_Master_Transmit(&hi2c1,addr,&dataOTH,1,150);
+	if(result)
+		return result;
+	result = HAL_I2C_Master_Receive(&hi2c1,addr,buffer,2,150);
+	if(result)
+		return result;
 	*value |= buffer[0] & 0xFF;
 	*value <<= 8;
 	*value |= buffer[1] & 0xFF;
