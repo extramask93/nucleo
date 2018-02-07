@@ -31,6 +31,7 @@ extern Calibration_t lastCalibrated;
 static USHORT usRegInputStart = REG_INPUT_START;
 static USHORT usRegInputBuf[REG_INPUT_NREGS];
 volatile uint8_t coils[COIL_NREGS] = {0,0,0,0,0,1,1,1,1,1,1,1};
+volatile uint8_t printCoils[] = {0,0,0,0,0};
 static char bufferT[13];
 static char bufferH[13];
 uint16_t timcnt = 0;
@@ -63,7 +64,8 @@ void ModbusRTUTask(void const * argument)
     	ResetSTOPTimer();
     	MeasureAndPrint();
     	ReloadRTC();
-    	lcdPrintRequested=0;
+    	if(!printCoils[0] && !printCoils[1] && !printCoils[2] && !printCoils[3] && !printCoils[4])
+    		lcdPrintRequested=0;
     }
     if(calibrationRequested) {
     	ReadCalibrationData();
@@ -210,6 +212,8 @@ eMBRegDiscreteCB( UCHAR * pucRegBuffer, USHORT usAddress, USHORT usNDiscrete )
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 	if(GPIO_Pin == BTN_LCD_Pin) {	/*Show data on LCD*/
+		memset(printCoils,0x1,5);
+		memset(coils,0x1,5);
 		lcdPrintRequested = true;
 		cnt=0;
 	}
@@ -261,10 +265,22 @@ void MeasureAll() {
     }
 }
 void MeasureAndPrint() {
-	LCD_init();
-	LCD_clrScr();
-	LCD_print("Measuring...",0,0);
-	PrintTemperatureAndHumidity(MeasureTemperatureAndHumidity());
+	if(!isOn) {
+		LCD_init();
+		LCD_clrScr();
+		LCD_print("T: ...",0,0);
+		LCD_print("H: ...",0,1);
+		LCD_print("L: ...",0,2);
+		LCD_print("Soil: ...",0,3);
+		LCD_print("Battery: ...",0,4);
+		LCD_print("C02: ...",0,5);
+	}
+	int errorcode=0;
+	if(coils[0]) {
+		errorcode = MeasureTemperatureAndHumidity();
+	}
+	if(!coils[0] && printCoils[0])
+		PrintTemperatureAndHumidity(errorcode);
 	ResetSTOPTimer();
 	PrintLightLevel(MeasureLight());
 	ResetSTOPTimer();
@@ -276,10 +292,13 @@ void MeasureAndPrint() {
 	ResetSTOPTimer();
 }
 int MeasureBattery() {
+	if(!coils[3])
+		return 0;
 	if(!coils[8])
 		return 4;
 	BatteryInit();
 	usRegInputBuf[4] = ReadBatteryValue();
+	coils[3]=0;
 }
 void PrintBatteryLevel() {
 	float bat = usRegInputBuf[4]/10.0;
@@ -288,23 +307,31 @@ void PrintBatteryLevel() {
 
 	sprintf(bufferT,"Battery:%dmV",usRegInputBuf[4]);
 	LCD_print(bufferT,0,4);
+	printCoils[3] =0;
 }
 int MeasureSoilLevel() {
+	if(!coils[2])
+		return 0;
 	if(!coils[7])
 		return 4;
 	SoilInit();
 	usRegInputBuf[3] = ReadValue();
+	coils[2]=0;
 }
 void PrintSoilLevel() {
 	sprintf(bufferT,"Soil: %i %%",usRegInputBuf[3]);
 	LCD_print(bufferT,0,3);
+	printCoils[2] =0;
 }
 int MeasureCO2Level() {
+	if(!coils[4])
+		return 0;
 	if(!coils[9])
 		return 4;
 	CO2_Init();
 	int a = CO2_GetConcentration(&usRegInputBuf[5]);
 	CO2_DeInit();
+	coils[4]=0;
 	return a;
 }
 void PrintCO2Level(int error) {
@@ -314,13 +341,17 @@ void PrintCO2Level(int error) {
 	else
 		sprintf(bufferT,"CO2: %i ppm",usRegInputBuf[5]);
 	LCD_print(bufferT,0,5);
+	printCoils[4] =0;
 }
 int MeasureLight() {
+	if(!coils[1])
+		return 0;
 	if(!coils[6])
 		return 4;
 	BV_Init();
 	int a = BV_ReadData(&usRegInputBuf[2]);
 	BV_DeInit();
+	coils[1]=0;
 	return a;
 }
 void PrintLightLevel(int error) {
@@ -329,29 +360,44 @@ void PrintLightLevel(int error) {
 	else
 		sprintf(bufferT, "L: %i lx",usRegInputBuf[2]);
 	LCD_print(bufferT,0,2);
+	printCoils[1] =0;
 }
 int MeasureTemperatureAndHumidity() {
-	/*static RTC_TimeTypeDef lastMeasurementTime = {0};
-	RTC_DateTypeDef temp;
-	RTC_TimeTypeDef now;
+	if(!coils[0])
+		return 0;
+	uint8_t trycount =0;
+	static RTC_TimeTypeDef lastMeasurementTime = {0};
+	RTC_DateTypeDef temp={0};
+	RTC_TimeTypeDef now={0};
 	HAL_RTC_GetTime(&hrtc,&now,RTC_FORMAT_BIN);
-	HAL_RTC_GetDate(&hrtc,&temp,RTC_FORMAT_BIN);*/
-	if(!coils[5])
-		return 4;
-	am2302_Init();
-	data=(const TH_Data){ 0 };
-	int result=0;
-	for(int i=0;i<2;i++) {
+	HAL_RTC_GetDate(&hrtc,&temp,RTC_FORMAT_BIN);
+	uint32_t diff = DifferenceBetweenTimePeriod(&lastMeasurementTime,&now);
+	if(diff>=3) {
+		HAL_RTC_GetTime(&hrtc,&lastMeasurementTime,RTC_FORMAT_BIN);
+		HAL_RTC_GetDate(&hrtc,&temp,RTC_FORMAT_BIN);
+		if(!coils[5])
+			return 4;
+		am2302_Init();
+		data=(const TH_Data){ 0 };
+		int result=0;
 		result = am2302_ReadData(&data);
 		if(!result) {
 			usRegInputBuf[0] = data.itemperature;
 			usRegInputBuf[1] = data.ihumidity;
-			break;
+			trycount=0;
+			coils[0]=0;
 		}
-		HAL_Delay(2000);
+		else {
+			trycount++;
+			if(trycount>3){
+				trycount=0; coils[0]=0;
+			}
+		}
+		am2302_DeIninit();
+		return result;
 	}
-	am2302_DeIninit();
-	return result;
+	else
+		return 0;
 }
 void PrintTemperatureAndHumidity(int error) {
 	if(error){
@@ -372,6 +418,7 @@ void PrintTemperatureAndHumidity(int error) {
 	}
 	LCD_print(bufferT,0,0);
 	LCD_print(bufferH,0,1);
+	printCoils[0] =0;
 }
 
 

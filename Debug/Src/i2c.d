@@ -35,7 +35,7 @@ Src/i2c.o: ../Src/i2c.c C:/STM32Toolchain/Nucleo/Inc/i2c.h \
  C:/STM32Toolchain/Nucleo/Drivers/STM32L0xx_HAL_Driver/Inc/stm32l0xx_hal_tim_ex.h \
  C:/STM32Toolchain/Nucleo/Drivers/STM32L0xx_HAL_Driver/Inc/stm32l0xx_hal_uart.h \
  C:/STM32Toolchain/Nucleo/Drivers/STM32L0xx_HAL_Driver/Inc/stm32l0xx_hal_uart_ex.h \
- C:/STM32Toolchain/Nucleo/Inc/gpio.h
+ C:/STM32Toolchain/Nucleo/Inc/gpio.h C:/STM32Toolchain/Nucleo/Inc/dma.h
 
 C:/STM32Toolchain/Nucleo/Inc/i2c.h:
 
@@ -112,3 +112,5 @@ C:/STM32Toolchain/Nucleo/Drivers/STM32L0xx_HAL_Driver/Inc/stm32l0xx_hal_uart.h:
 C:/STM32Toolchain/Nucleo/Drivers/STM32L0xx_HAL_Driver/Inc/stm32l0xx_hal_uart_ex.h:
 
 C:/STM32Toolchain/Nucleo/Inc/gpio.h:
+
+C:/STM32Toolchain/Nucleo/Inc/dma.h:

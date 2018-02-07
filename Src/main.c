@@ -40,6 +40,7 @@
 #include "stm32l0xx_hal.h"
 #include "adc.h"
 #include "comp.h"
+#include "dma.h"
 #include "i2c.h"
 #include "usart.h"
 #include "rtc.h"
@@ -99,6 +100,7 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_DMA_Init();
   MX_LPUART1_UART_Init();
   MX_RTC_Init();
   MX_ADC_Init();
@@ -111,14 +113,10 @@ int main(void)
   MX_USART1_UART_Init();
   MX_I2C1_Init();
 
-
   /* USER CODE BEGIN 2 */
   BV_Init();
   HAL_GPIO_WritePin(LD2_GPIO_Port,LD2_Pin,GPIO_PIN_SET);
-  LCD_init();
-  RTC_TimeTypeDef sTimeStamp;
-  RTC_DateTypeDef date;
-  char buffer[20];
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -128,12 +126,9 @@ int main(void)
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
-	  HAL_RTC_GetTime(&hrtc,&sTimeStamp,RTC_FORMAT_BIN);
-	  HAL_RTC_GetDate(&hrtc,&date,RTC_FORMAT_BIN);
-	  sprintf(buffer,"H:%i M:%i S:%i", sTimeStamp.Hours, sTimeStamp.Minutes, sTimeStamp.Seconds);
-	  LCD_print(buffer,0,0);
-	  HAL_Delay(1000);
-	 //ModbusRTUTask("asd");
+	  //BV_ReadData(&val);
+	  //HAL_Delay(1000);
+	 ModbusRTUTask("asd");
   }
   /* USER CODE END 3 */
 

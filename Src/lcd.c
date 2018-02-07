@@ -15,6 +15,7 @@
 struct LCD_att lcd;
 struct LCD_GPIO lcd_gpio;
 volatile int cnt =0;
+volatile int isOn =0;
 extern uint16_t downcounter;
 extern volatile bool STOPRequested;
 /*
@@ -27,6 +28,7 @@ static void LCD_AdjustBrightness()
     //fprintf(lcd, "bv: %d\n", (int)targetBrightness);
 
     uint16_t lightVal=0;
+    BV_Init();
     BV_ReadData(&lightVal);
     //HAL_Delay(250);
     uint16_t percentage = 0;
@@ -45,6 +47,7 @@ static void LCD_Power_Down() {
 	LCD_write(LCD_DISPLAY_POWER_DOWN, LCD_COMMAND);
 }
 void LCD_Off() {
+	isOn=0;
 	HAL_TIM_PWM_Stop(&htim22,TIM_CHANNEL_1);
 	HAL_TIM_Base_DeInit(&htim22);
 	LCD_Power_Down();
@@ -52,6 +55,8 @@ void LCD_Off() {
 }
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 	if(htim->Instance == TIM2) {
+		if(isOn)
+			LCD_AdjustBrightness();
 		cnt++;
 		if(cnt>=6) {
 			LCD_Off();
@@ -97,6 +102,7 @@ void LCD_write(uint8_t data, uint8_t mode){
  * @brief Initialize the LCD using predetermined values
  */
 void LCD_init(){
+	isOn=1;
 	MX_TIM22_Init();
 	HAL_TIM_PWM_Start(&htim22, TIM_CHANNEL_1);
 	LCD_AdjustBrightness();
@@ -111,7 +117,7 @@ void LCD_init(){
 	HAL_GPIO_WritePin(GPIOB,GPIO_PIN_4,GPIO_PIN_RESET);
 	LCD_Reset();
 	LCD_write(0x21, LCD_COMMAND); //LCD extended commands.
-	LCD_write(0xE0, LCD_COMMAND); //set LCD Vop(Contrast).
+	LCD_write(0xC0, LCD_COMMAND); //set LCD Vop(Contrast).
 	LCD_write(0x04, LCD_COMMAND); //set temp coefficent.
 	LCD_write(0x14, LCD_COMMAND); //LCD bias mode 1:40.
 	LCD_write(0x20, LCD_COMMAND); //LCD basic commands.
@@ -210,69 +216,6 @@ void LCD_refreshScr(){
  * @param ymin: starting point on the y-axis
  * @param ymax: ending point on the y-axis
  */
-void LCD_refreshArea(uint8_t xmin, uint8_t ymin, uint8_t xmax, uint8_t ymax){
-  for(int i = 0; i < 6; i++){
-    if(i * 8 > ymax){
-      break;
-    }
-    //LCD_goXY(xmin, i);
-    LCD_write(LCD_SETYADDR | i, LCD_COMMAND);
-    LCD_write(LCD_SETXADDR | xmin, LCD_COMMAND);
-    for(int j = xmin; j <= xmax; j++){
-      LCD_write(lcd.buffer[(i * LCD_WIDTH) + j], LCD_DATA);
-    }
-  }
-}
-
-/*
- * @brief Sets a pixel on the screen
- */
-void LCD_setPixel(uint8_t x, uint8_t y, bool pixel){
-  if(x >= LCD_WIDTH)
-    x = LCD_WIDTH - 1;
-  if(y >= LCD_HEIGHT)
-    y = LCD_HEIGHT - 1;
-
-  if(pixel != false){
-    lcd.buffer[x + (y / 8) * LCD_WIDTH] |= 1 << (y % 8);
-  }
-  else{
-    lcd.buffer[x + (y / 8) * LCD_WIDTH] &= ~(1 << (y % 8));
-  }
-}
-
-/*
- * @brief Draws a horizontal line
- * @param x: starting point on the x-axis
- * @param y: starting point on the y-axis
- * @param l: length of the line
- */
-void LCD_drawHLine(int x, int y, int l){
-  int by, bi;
-
-  if ((x>=0) && (x<LCD_WIDTH) && (y>=0) && (y<LCD_HEIGHT)){
-    for (int cx=0; cx<l; cx++){
-      by=((y/8)*84)+x;
-      bi=y % 8;
-      lcd.buffer[by+cx] |= (1<<bi);
-    }
-  }
-}
-
-/*
- * @brief Draws a vertical line
- * @param x: starting point on the x-axis
- * @param y: starting point on the y-axis
- * @param l: length of the line
- */
-void LCD_drawVLine(int x, int y, int l){
-
-  if ((x>=0) && (x<84) && (y>=0) && (y<48)){
-    for (int cy=0; cy<= l; cy++){
-      LCD_setPixel(x, y+cy, true);
-    }
-  }
-}
 
 /*
  * @brief abs function used in LCD_drawLine
@@ -293,77 +236,7 @@ int abs(int x){
  * @param x2: ending point on the x-axis
  * @param y2: ending point on the y-axis
  */
-void LCD_drawLine(int x1, int y1, int x2, int y2){
-  int tmp;
-  double delta, tx, ty;
 
-  if (((x2-x1)<0)){
-    tmp=x1;
-    x1=x2;
-    x2=tmp;
-    tmp=y1;
-    y1=y2;
-    y2=tmp;
-  }
-    if (((y2-y1)<0)){
-    tmp=x1;
-    x1=x2;
-    x2=tmp;
-    tmp=y1;
-    y1=y2;
-    y2=tmp;
-  }
-
-  if (y1==y2){
-    if (x1>x2){
-      tmp=x1;
-      x1=x2;
-      x2=tmp;
-    }
-    LCD_drawHLine(x1, y1, x2-x1);
-  }
-  else if (x1==x2){
-    if (y1>y2){
-      tmp=y1;
-      y1=y2;
-      y2=tmp;
-    }
-    LCD_drawHLine(x1, y1, y2-y1);
-  }
-  else if (abs(x2-x1)>abs(y2-y1)){
-    delta=((double)(y2-y1)/(double)(x2-x1));
-    ty=(double) y1;
-    if (x1>x2){
-      for (int i=x1; i>=x2; i--){
-        LCD_setPixel(i, (int) (ty+0.5), true);
-            ty=ty-delta;
-      }
-    }
-    else
-    {
-      for (int i=x1; i<=x2; i++){
-        LCD_setPixel(i, (int) (ty+0.5), true);
-        ty=ty+delta;
-      }
-    }
-  }
-  else{
-    delta=((float) (x2-x1)/(float) (y2-y1));
-    tx=(float) (x1);
-        if (y1>y2){
-          for (int i=y2+1; i>y1; i--){
-            LCD_setPixel((int) (tx+0.5), i, true);
-            tx=tx+delta;
-          }
-        }
-        else{
-          for (int i=y1; i<y2+1; i++){
-            LCD_setPixel((int) (tx+0.5), i, true);
-            tx=tx+delta;
-          }
-        }
-  }
-}
 
 /*
  * @brief Draws a rectangle
@@ -372,10 +245,5 @@ void LCD_drawLine(int x1, int y1, int x2, int y2){
  * @param x2: ending point on the x-axis
  * @param y2: ending point on the y-axis
  */
-void LCD_drawRectangle(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2){
-  LCD_drawLine(x1, y1, x2, y1);
-  LCD_drawLine(x1, y1, x1, y2);
-  LCD_drawLine(x2, y1, x2, y2);
-  LCD_drawLine(x1, y2, x2, y2);
-}
+
 

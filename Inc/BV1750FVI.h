@@ -7,7 +7,7 @@
 
 #ifndef BV1750FVI_H_
 #define BV1750FVI_H_
-#include "stdint.h"
+#include <stdint.h>
 enum BH_ErrorType {
 	BH_OK, BH_TRERROR, BH_REERROR
 };

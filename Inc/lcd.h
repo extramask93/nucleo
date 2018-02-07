@@ -34,7 +34,7 @@
 #define LCD_WIDTH 84
 #define LCD_HEIGHT 48
 #define LCD_SIZE LCD_WIDTH * LCD_HEIGHT / 8
-
+extern volatile int isOn;
 /*
  * @brief LCD parameters
  */
@@ -74,13 +74,6 @@ void LCD_goXY(uint8_t x, uint8_t y);
  * These functions draw in a buffer variable. It's necessary to use LCD_refreshScr() or LCD_refreshArea()
  * in order to send data to the LCD.
  */
-void LCD_refreshScr();
-void LCD_refreshArea(uint8_t xmin, uint8_t ymin, uint8_t xmax, uint8_t ymax);
-void LCD_setPixel(uint8_t x, uint8_t y, bool pixel);
-void LCD_drawHLine(int x, int y, int l);
-void LCD_drawVLine(int x, int y, int l);
-void LCD_drawLine(int x1, int y1, int x2, int y2);
-void LCD_drawRectangle(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2);
 
 
 #endif /* LCD_H_ */

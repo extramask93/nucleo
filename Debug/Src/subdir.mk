@@ -11,6 +11,7 @@ C_SRCS += \
 ../Src/battery.c \
 ../Src/co2.c \
 ../Src/comp.c \
+../Src/dma.c \
 ../Src/gpio.c \
 ../Src/i2c.c \
 ../Src/lcd.c \
@@ -18,6 +19,7 @@ C_SRCS += \
 ../Src/mbtask.c \
 ../Src/power.c \
 ../Src/rtc.c \
+../Src/rtctools.c \
 ../Src/spi.c \
 ../Src/stm32l0xx_hal_msp.c \
 ../Src/stm32l0xx_it.c \
@@ -33,6 +35,7 @@ OBJS += \
 ./Src/battery.o \
 ./Src/co2.o \
 ./Src/comp.o \
+./Src/dma.o \
 ./Src/gpio.o \
 ./Src/i2c.o \
 ./Src/lcd.o \
@@ -40,6 +43,7 @@ OBJS += \
 ./Src/mbtask.o \
 ./Src/power.o \
 ./Src/rtc.o \
+./Src/rtctools.o \
 ./Src/spi.o \
 ./Src/stm32l0xx_hal_msp.o \
 ./Src/stm32l0xx_it.o \
@@ -55,6 +59,7 @@ C_DEPS += \
 ./Src/battery.d \
 ./Src/co2.d \
 ./Src/comp.d \
+./Src/dma.d \
 ./Src/gpio.d \
 ./Src/i2c.d \
 ./Src/lcd.d \
@@ -62,6 +67,7 @@ C_DEPS += \
 ./Src/mbtask.d \
 ./Src/power.d \
 ./Src/rtc.d \
+./Src/rtctools.d \
 ./Src/spi.d \
 ./Src/stm32l0xx_hal_msp.d \
 ./Src/stm32l0xx_it.d \
