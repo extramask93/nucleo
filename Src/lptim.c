@@ -1,8 +1,8 @@
 /**
   ******************************************************************************
-  * File Name          : COMP.c
+  * File Name          : LPTIM.c
   * Description        : This file provides code for the configuration
-  *                      of the COMP instances.
+  *                      of the LPTIM instances.
   ******************************************************************************
   ** This notice applies to any and all portions of this file
   * that are not between comment pairs USER CODE BEGIN and
@@ -38,85 +38,61 @@
   */
 
 /* Includes ------------------------------------------------------------------*/
-#include "comp.h"
-
-#include "gpio.h"
+#include "lptim.h"
 
 /* USER CODE BEGIN 0 */
 
 /* USER CODE END 0 */
 
-COMP_HandleTypeDef hcomp2;
+LPTIM_HandleTypeDef hlptim1;
 
-/* COMP2 init function */
-void MX_COMP2_Init(void)
+/* LPTIM1 init function */
+void MX_LPTIM1_Init(void)
 {
 
-  hcomp2.Instance = COMP2;
-  hcomp2.Init.InvertingInput = COMP_INPUT_MINUS_3_4VREFINT;
-  hcomp2.Init.NonInvertingInput = COMP_INPUT_PLUS_IO1;
-  hcomp2.Init.LPTIMConnection = COMP_LPTIMCONNECTION_DISABLED;
-  hcomp2.Init.OutputPol = COMP_OUTPUTPOL_NONINVERTED;
-  hcomp2.Init.Mode = COMP_POWERMODE_MEDIUMSPEED;
-  hcomp2.Init.WindowMode = COMP_WINDOWMODE_DISABLE;
-  hcomp2.Init.TriggerMode = COMP_TRIGGERMODE_NONE;
-  if (HAL_COMP_Init(&hcomp2) != HAL_OK)
+  hlptim1.Instance = LPTIM1;
+  hlptim1.Init.Clock.Source = LPTIM_CLOCKSOURCE_APBCLOCK_LPOSC;
+  hlptim1.Init.Clock.Prescaler = LPTIM_PRESCALER_DIV128;
+  hlptim1.Init.Trigger.Source = LPTIM_TRIGSOURCE_SOFTWARE;
+  hlptim1.Init.OutputPolarity = LPTIM_OUTPUTPOLARITY_HIGH;
+  hlptim1.Init.UpdateMode = LPTIM_UPDATE_IMMEDIATE;
+  hlptim1.Init.CounterSource = LPTIM_COUNTERSOURCE_INTERNAL;
+  if (HAL_LPTIM_Init(&hlptim1) != HAL_OK)
   {
     _Error_Handler(__FILE__, __LINE__);
   }
 
 }
 
-void HAL_COMP_MspInit(COMP_HandleTypeDef* compHandle)
+void HAL_LPTIM_MspInit(LPTIM_HandleTypeDef* lptimHandle)
 {
 
-  GPIO_InitTypeDef GPIO_InitStruct;
-  if(compHandle->Instance==COMP2)
+  if(lptimHandle->Instance==LPTIM1)
   {
-  /* USER CODE BEGIN COMP2_MspInit 0 */
+  /* USER CODE BEGIN LPTIM1_MspInit 0 */
 
-  /* USER CODE END COMP2_MspInit 0 */
-  
-    /**COMP2 GPIO Configuration    
-    PA3     ------> COMP2_INP
-    PA12     ------> COMP2_OUT 
-    */
-    GPIO_InitStruct.Pin = BAT_CMP_Pin;
-    GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
-    HAL_GPIO_Init(BAT_CMP_GPIO_Port, &GPIO_InitStruct);
+  /* USER CODE END LPTIM1_MspInit 0 */
+    /* LPTIM1 clock enable */
+    __HAL_RCC_LPTIM1_CLK_ENABLE();
+  /* USER CODE BEGIN LPTIM1_MspInit 1 */
 
-    GPIO_InitStruct.Pin = BAT_CMP_OUT_Pin;
-    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
-    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-    GPIO_InitStruct.Alternate = GPIO_AF7_COMP2;
-    HAL_GPIO_Init(BAT_CMP_OUT_GPIO_Port, &GPIO_InitStruct);
-
-  /* USER CODE BEGIN COMP2_MspInit 1 */
-
-  /* USER CODE END COMP2_MspInit 1 */
+  /* USER CODE END LPTIM1_MspInit 1 */
   }
 }
 
-void HAL_COMP_MspDeInit(COMP_HandleTypeDef* compHandle)
+void HAL_LPTIM_MspDeInit(LPTIM_HandleTypeDef* lptimHandle)
 {
 
-  if(compHandle->Instance==COMP2)
+  if(lptimHandle->Instance==LPTIM1)
   {
-  /* USER CODE BEGIN COMP2_MspDeInit 0 */
+  /* USER CODE BEGIN LPTIM1_MspDeInit 0 */
 
-  /* USER CODE END COMP2_MspDeInit 0 */
-  
-    /**COMP2 GPIO Configuration    
-    PA3     ------> COMP2_INP
-    PA12     ------> COMP2_OUT 
-    */
-    HAL_GPIO_DeInit(GPIOA, BAT_CMP_Pin|BAT_CMP_OUT_Pin);
+  /* USER CODE END LPTIM1_MspDeInit 0 */
+    /* Peripheral clock disable */
+    __HAL_RCC_LPTIM1_CLK_DISABLE();
+  /* USER CODE BEGIN LPTIM1_MspDeInit 1 */
 
-  /* USER CODE BEGIN COMP2_MspDeInit 1 */
-
-  /* USER CODE END COMP2_MspDeInit 1 */
+  /* USER CODE END LPTIM1_MspDeInit 1 */
   }
 } 
 

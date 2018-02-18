@@ -17,6 +17,7 @@ typedef struct TH_Data {
 } TH_Data;
 
 void am2302_Init();
+void am2302_DeInit();
 int am2302_ReadData(TH_Data *result);
 
 

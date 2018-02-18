@@ -11,52 +11,55 @@
 #include <math.h>
 #include <stdlib.h>
 
+#define SOIL_CHANNEL ADC_CHANNEL_1
+extern uint16_t y[2];
+
 volatile Calibration_t lastCalibrated = WET;
-static uint32_t wet = 4096;
-static uint32_t dry = 0;
 void SoilInit() {
 	  ADC_ChannelConfTypeDef sConfig;
-	  sConfig.Channel = ADC_CHANNEL_1;
-	  sConfig.Rank = 1;
+	  sConfig.Channel = SOIL_CHANNEL;
+	  sConfig.Rank = ADC_RANK_CHANNEL_NUMBER;
 	  HAL_ADC_ConfigChannel(&hadc, &sConfig);
+	  HAL_GPIO_WritePin(SOIL_PWR_GPIO_Port,SOIL_PWR_Pin,GPIO_PIN_SET);
+}
+void SoilDeInit() {
+	  ADC_ChannelConfTypeDef sConfig;
+	  sConfig.Channel = SOIL_CHANNEL;
+	  sConfig.Rank = ADC_RANK_NONE;
+	  HAL_ADC_ConfigChannel(&hadc, &sConfig);
+	  HAL_GPIO_WritePin(SOIL_PWR_GPIO_Port,SOIL_PWR_Pin,GPIO_PIN_RESET);
 }
 static uint32_t SoilMap(uint32_t value) {
-	if(value < dry) return 0;
-	if(value > wet) return 100;
-	return ((value * 100)/wet);
+	uint16_t *dry = (uint16_t*)(0x0808000C);
+	uint16_t *wet = (uint16_t*)(0x0808000A);
+	if(value < *dry) return 0;
+	if(value > *wet) return 100;
+	return ((value * 100)/(*wet));
 }
 uint32_t ReadValue() {
-	uint32_t result=0;
-	HAL_ADC_Start(&hadc);
-	if(HAL_ADC_PollForConversion(&hadc,100) == HAL_OK)
-		result = HAL_ADC_GetValue(&hadc);
-		else {
-			result= -1;
-		}
-	result = abs(4096-result);
-	result = SoilMap(result);
-	HAL_ADC_Stop(&hadc);
-	return result;
+	uint32_t temp = y[1];
+	temp = SoilMap(temp);
+	return temp;
 }
 void SaveWetValue() {
-	uint32_t result=0;
-	HAL_ADC_Start(&hadc);
-	if(HAL_ADC_PollForConversion(&hadc,100) == HAL_OK)
-		result = HAL_ADC_GetValue(&hadc);
-		else {
-			result= -1;
-		}
-	wet = abs(4096-result);
-	HAL_ADC_Stop(&hadc);
+	SoilInit();
+	HAL_ADC_Start_DMA(&hadc,y,2);
+	HAL_ADC_PollForConversion(&hadc,2000);
+	HAL_ADC_Start_DMA(&hadc,y,2);
+	HAL_ADC_PollForConversion(&hadc,2000);
+	HAL_FLASHEx_DATAEEPROM_Unlock();
+	HAL_FLASHEx_DATAEEPROM_Program(FLASH_TYPEPROGRAMDATA_HALFWORD,0x0808000A,2200);
+	HAL_FLASHEx_DATAEEPROM_Lock();
+	lastCalibrated = WET;
 }
 void SaveDryValue() {
-	uint32_t result=0;
-	HAL_ADC_Start(&hadc);
-	if(HAL_ADC_PollForConversion(&hadc,100) == HAL_OK)
-		result = HAL_ADC_GetValue(&hadc);
-		else {
-			result= -1;
-		}
-	dry = abs(4096-result);
-	HAL_ADC_Stop(&hadc);
+	SoilInit();
+	HAL_ADC_Start_DMA(&hadc,y,2);
+	HAL_ADC_PollForConversion(&hadc,2000);
+	HAL_ADC_Start_DMA(&hadc,y,2);
+	HAL_ADC_PollForConversion(&hadc,2000);
+	HAL_FLASHEx_DATAEEPROM_Unlock();
+	HAL_FLASHEx_DATAEEPROM_Program(FLASH_TYPEPROGRAMDATA_HALFWORD,0x0808000C,y[1]);
+	HAL_FLASHEx_DATAEEPROM_Lock();
+	lastCalibrated = DRY;
 }

@@ -4,8 +4,7 @@
 // *  Created on: 26.11.2017
 // *      Author: LENOVO
 // */
-#include "mb.h"
-#include "mbport.h"
+
 #include "mbtask.h"
 #include "am2302.h"
 #include "BV1750FVI.h"
@@ -17,23 +16,28 @@
 #include "spi.h"
 #include "gpio.h"
 #include "lcd.h"
+#include "dma.h"
 #include "rtc.h"
 #include "SoilMoisture.h"
 #include "battery.h"
 #include "power.h"
 #include "co2.h"
 #include <stdio.h>
+#include <string.h>
 #include <stdbool.h>
 
 
 
 extern Calibration_t lastCalibrated;
 static USHORT usRegInputStart = REG_INPUT_START;
-static USHORT usRegInputBuf[REG_INPUT_NREGS];
+volatile USHORT usRegInputBuf[REG_INPUT_NREGS];
 volatile uint8_t coils[COIL_NREGS] = {0,0,0,0,0,1,1,1,1,1,1,1};
-volatile uint8_t printCoils[] = {0,0,0,0,0};
-static char bufferT[13];
-static char bufferH[13];
+volatile uint16_t y[2];
+RTC_TimeTypeDef lastMeasurementTime;
+RTC_DateTypeDef tempdate;
+volatile uint8_t printCoils[5] = {0,0,0,0,0};
+char bufferT[SCR_WIDTH];
+char bufferH[SCR_WIDTH];
 uint16_t timcnt = 0;
 TH_Data data=(const TH_Data){ 0 };
 extern volatile int cnt;
@@ -48,7 +52,7 @@ void ModbusRTUTask(void const * argument)
 {
 	eMBInit(MB_RTU, 1, 3, 9600, MB_PAR_NONE);
 	eMBEnable();
-	memset(coils,0x1,5);
+	memset((void*)coils,0x1,5);
 	MeasureAll();
 	StopMode();
   while(1) {
@@ -231,12 +235,10 @@ void ReadCalibrationData() {
 	if(lastCalibrated == WET) {
 		LCD_print("Saving value  of dry soil...",0,0);
 		SaveDryValue();
-		lastCalibrated = DRY;
 	}
 	else {
 		LCD_print("Saving value  of wet soil...",0,0);
 		SaveWetValue();
-		lastCalibrated = WET;
 	}
 }
 void MeasureAll() {
@@ -248,13 +250,8 @@ void MeasureAll() {
     	MeasureLight();
     	coils[1]=0;
     }
-    if(coils[2]) {
-    	MeasureSoilLevel();
-    	coils[2]=0;
-    }
-    if(coils[3]) {
-    	MeasureBattery();
-    	coils[3]=0;
+    if(coils[2] || coils[3]) {
+    	MeasureAnalogs();
     }
     if(coils[4]) {
     	if(coils[11])
@@ -263,6 +260,36 @@ void MeasureAll() {
     		;//turn on co2 sensor and scheduele measurement
     	coils[4]=0;
     }
+}
+void MeasureAnalogs() {
+	SoilInit();
+	BatteryInit();
+	HAL_ADC_Start_DMA(&hadc,y,2);
+	HAL_ADC_PollForConversion(&hadc,2000);
+	HAL_ADC_Start_DMA(&hadc,y,2);
+	HAL_ADC_PollForConversion(&hadc,2000);
+	SoilDeInit();
+	BatteryDeInit();
+	usRegInputBuf[3] = ReadValue();
+	usRegInputBuf[4] = ReadBatteryValue();
+	coils[2] = 0;
+	coils[3] = 0;
+}
+void PrintAnalogs() {
+	if(printCoils[2]) {
+		memset(bufferT,' ',SCR_WIDTH);
+		LCD_print(bufferT,0,3);
+		sprintf(bufferT, "Soil: %i %%",usRegInputBuf[3]);
+		LCD_print(bufferT,0,3);
+		printCoils[2] = 0;
+	}
+	if(printCoils[3]) {
+		memset(bufferT,' ',SCR_WIDTH);
+		LCD_print(bufferT,0,4);
+		sprintf(bufferT, "Bat: %i mV",usRegInputBuf[4]);
+		LCD_print(bufferT,0,4);
+		printCoils[3] =0;
+	}
 }
 void MeasureAndPrint() {
 	if(!isOn) {
@@ -284,64 +311,10 @@ void MeasureAndPrint() {
 	ResetSTOPTimer();
 	PrintLightLevel(MeasureLight());
 	ResetSTOPTimer();
-	PrintSoilLevel(MeasureSoilLevel());
-	ResetSTOPTimer();
-	PrintBatteryLevel(MeasureBattery());
-	ResetSTOPTimer();
+	MeasureAnalogs();
+	PrintAnalogs();
 	PrintCO2Level(MeasureCO2Level());
 	ResetSTOPTimer();
-}
-int MeasureBattery() {
-	if(!coils[3])
-		return 0;
-	if(!coils[8])
-		return 4;
-	BatteryInit();
-	usRegInputBuf[4] = ReadBatteryValue();
-	coils[3]=0;
-}
-void PrintBatteryLevel() {
-	float bat = usRegInputBuf[4]/10.0;
-	int bat1 = bat;                  // Get the integer (678).
-	float batfrac = bat - bat1;      // Get fraction (0.1).
-
-	sprintf(bufferT,"Battery:%dmV",usRegInputBuf[4]);
-	LCD_print(bufferT,0,4);
-	printCoils[3] =0;
-}
-int MeasureSoilLevel() {
-	if(!coils[2])
-		return 0;
-	if(!coils[7])
-		return 4;
-	SoilInit();
-	usRegInputBuf[3] = ReadValue();
-	coils[2]=0;
-}
-void PrintSoilLevel() {
-	sprintf(bufferT,"Soil: %i %%",usRegInputBuf[3]);
-	LCD_print(bufferT,0,3);
-	printCoils[2] =0;
-}
-int MeasureCO2Level() {
-	if(!coils[4])
-		return 0;
-	if(!coils[9])
-		return 4;
-	CO2_Init();
-	int a = CO2_GetConcentration(&usRegInputBuf[5]);
-	CO2_DeInit();
-	coils[4]=0;
-	return a;
-}
-void PrintCO2Level(int error) {
-	if(error) {
-		sprintf(bufferT,"CO2: Error (%i)",error);
-	}
-	else
-		sprintf(bufferT,"CO2: %i ppm",usRegInputBuf[5]);
-	LCD_print(bufferT,0,5);
-	printCoils[4] =0;
 }
 int MeasureLight() {
 	if(!coils[1])
@@ -355,6 +328,10 @@ int MeasureLight() {
 	return a;
 }
 void PrintLightLevel(int error) {
+	if(!printCoils[1])
+		return;
+	memset(bufferT,' ',SCR_WIDTH);
+	LCD_print(bufferT,0,2);
 	if(error)
 		sprintf(bufferT, "L: Error(%i)",error);
 	else
@@ -362,19 +339,44 @@ void PrintLightLevel(int error) {
 	LCD_print(bufferT,0,2);
 	printCoils[1] =0;
 }
+
+
+int MeasureCO2Level() {
+	if(!coils[4])
+		return 0;
+	if(!coils[9])
+		return 4;
+	CO2_Init();
+	int a = CO2_GetConcentration(&usRegInputBuf[5]);
+	CO2_DeInit();
+	coils[4]=0;
+	return a;
+}
+void PrintCO2Level(int error) {
+	if(!printCoils[4])
+		return;
+	memset(bufferT,' ',SCR_WIDTH);
+	LCD_print(bufferT,0,5);
+	if(error) {
+		sprintf(bufferT,"CO2: Error (%i)",error);
+	}
+	else
+		sprintf(bufferT,"CO2: %i ppm",usRegInputBuf[5]);
+	LCD_print(bufferT,0,5);
+	printCoils[4] =0;
+}
+
 int MeasureTemperatureAndHumidity() {
 	if(!coils[0])
 		return 0;
 	uint8_t trycount =0;
-	static RTC_TimeTypeDef lastMeasurementTime = {0};
-	RTC_DateTypeDef temp={0};
 	RTC_TimeTypeDef now={0};
 	HAL_RTC_GetTime(&hrtc,&now,RTC_FORMAT_BIN);
-	HAL_RTC_GetDate(&hrtc,&temp,RTC_FORMAT_BIN);
+	HAL_RTC_GetDate(&hrtc,&tempdate,RTC_FORMAT_BIN);
 	uint32_t diff = DifferenceBetweenTimePeriod(&lastMeasurementTime,&now);
 	if(diff>=3) {
 		HAL_RTC_GetTime(&hrtc,&lastMeasurementTime,RTC_FORMAT_BIN);
-		HAL_RTC_GetDate(&hrtc,&temp,RTC_FORMAT_BIN);
+		HAL_RTC_GetDate(&hrtc,&tempdate,RTC_FORMAT_BIN);
 		if(!coils[5])
 			return 4;
 		am2302_Init();
@@ -400,6 +402,9 @@ int MeasureTemperatureAndHumidity() {
 		return 0;
 }
 void PrintTemperatureAndHumidity(int error) {
+	memset(bufferT,' ',SCR_WIDTH);
+	LCD_print(bufferT,0,1);
+	LCD_print(bufferT,0,0);
 	if(error){
 		sprintf(bufferT,"T: Error (%i)",error);
 		sprintf(bufferH,"H: Error (%i)",error);

@@ -56,12 +56,6 @@
 #define BTN_CAL_CO2_GPIO_Port GPIOC
 #define SOIL_PWR_Pin GPIO_PIN_0
 #define SOIL_PWR_GPIO_Port GPIOA
-#define SOIL_Pin GPIO_PIN_1
-#define SOIL_GPIO_Port GPIOA
-#define BATTERY_Pin GPIO_PIN_2
-#define BATTERY_GPIO_Port GPIOA
-#define BAT_CMP_Pin GPIO_PIN_3
-#define BAT_CMP_GPIO_Port GPIOA
 #define LD2_Pin GPIO_PIN_5
 #define LD2_GPIO_Port GPIOA
 #define LCD_DIN_Pin GPIO_PIN_7
@@ -76,8 +70,6 @@
 #define CO2_RX_GPIO_Port GPIOA
 #define CO2_HD_Pin GPIO_PIN_11
 #define CO2_HD_GPIO_Port GPIOA
-#define BAT_CMP_OUT_Pin GPIO_PIN_12
-#define BAT_CMP_OUT_GPIO_Port GPIOA
 #define TMS_Pin GPIO_PIN_13
 #define TMS_GPIO_Port GPIOA
 #define TCK_Pin GPIO_PIN_14

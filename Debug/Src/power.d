@@ -20,13 +20,13 @@ Src/power.o: ../Src/power.c C:/STM32Toolchain/Nucleo/Inc/power.h \
  C:/STM32Toolchain/Nucleo/Drivers/STM32L0xx_HAL_Driver/Inc/stm32l0xx_hal_cortex.h \
  C:/STM32Toolchain/Nucleo/Drivers/STM32L0xx_HAL_Driver/Inc/stm32l0xx_hal_adc.h \
  C:/STM32Toolchain/Nucleo/Drivers/STM32L0xx_HAL_Driver/Inc/stm32l0xx_hal_adc_ex.h \
- C:/STM32Toolchain/Nucleo/Drivers/STM32L0xx_HAL_Driver/Inc/stm32l0xx_hal_comp.h \
- C:/STM32Toolchain/Nucleo/Drivers/STM32L0xx_HAL_Driver/Inc/stm32l0xx_hal_comp_ex.h \
  C:/STM32Toolchain/Nucleo/Drivers/STM32L0xx_HAL_Driver/Inc/stm32l0xx_hal_flash.h \
  C:/STM32Toolchain/Nucleo/Drivers/STM32L0xx_HAL_Driver/Inc/stm32l0xx_hal_flash_ex.h \
  C:/STM32Toolchain/Nucleo/Drivers/STM32L0xx_HAL_Driver/Inc/stm32l0xx_hal_flash_ramfunc.h \
  C:/STM32Toolchain/Nucleo/Drivers/STM32L0xx_HAL_Driver/Inc/stm32l0xx_hal_i2c.h \
  C:/STM32Toolchain/Nucleo/Drivers/STM32L0xx_HAL_Driver/Inc/stm32l0xx_hal_i2c_ex.h \
+ C:/STM32Toolchain/Nucleo/Drivers/STM32L0xx_HAL_Driver/Inc/stm32l0xx_hal_lptim.h \
+ C:/STM32Toolchain/Nucleo/Drivers/STM32L0xx_HAL_Driver/Inc/stm32l0xx_hal_lptim_ex.h \
  C:/STM32Toolchain/Nucleo/Drivers/STM32L0xx_HAL_Driver/Inc/stm32l0xx_hal_pwr.h \
  C:/STM32Toolchain/Nucleo/Drivers/STM32L0xx_HAL_Driver/Inc/stm32l0xx_hal_pwr_ex.h \
  C:/STM32Toolchain/Nucleo/Drivers/STM32L0xx_HAL_Driver/Inc/stm32l0xx_hal_rtc.h \
@@ -45,7 +45,8 @@ Src/power.o: ../Src/power.c C:/STM32Toolchain/Nucleo/Inc/power.h \
  C:/STM32Toolchain/Nucleo/Drivers/freemodbus/modbus/include/mbport.h \
  C:/STM32Toolchain/Nucleo/Drivers/freemodbus/modbus/include/mbproto.h \
  C:/STM32Toolchain/Nucleo/Inc/rtc.h C:/STM32Toolchain/Nucleo/Inc/co2.h \
- C:/STM32Toolchain/Nucleo/Inc/mbtask.h
+ C:/STM32Toolchain/Nucleo/Inc/mbtask.h \
+ C:/STM32Toolchain/Nucleo/Drivers/freemodbus/modbus/include/mbport.h
 
 C:/STM32Toolchain/Nucleo/Inc/power.h:
 
@@ -91,10 +92,6 @@ C:/STM32Toolchain/Nucleo/Drivers/STM32L0xx_HAL_Driver/Inc/stm32l0xx_hal_adc.h:
 
 C:/STM32Toolchain/Nucleo/Drivers/STM32L0xx_HAL_Driver/Inc/stm32l0xx_hal_adc_ex.h:
 
-C:/STM32Toolchain/Nucleo/Drivers/STM32L0xx_HAL_Driver/Inc/stm32l0xx_hal_comp.h:
-
-C:/STM32Toolchain/Nucleo/Drivers/STM32L0xx_HAL_Driver/Inc/stm32l0xx_hal_comp_ex.h:
-
 C:/STM32Toolchain/Nucleo/Drivers/STM32L0xx_HAL_Driver/Inc/stm32l0xx_hal_flash.h:
 
 C:/STM32Toolchain/Nucleo/Drivers/STM32L0xx_HAL_Driver/Inc/stm32l0xx_hal_flash_ex.h:
@@ -104,6 +101,10 @@ C:/STM32Toolchain/Nucleo/Drivers/STM32L0xx_HAL_Driver/Inc/stm32l0xx_hal_flash_ra
 C:/STM32Toolchain/Nucleo/Drivers/STM32L0xx_HAL_Driver/Inc/stm32l0xx_hal_i2c.h:
 
 C:/STM32Toolchain/Nucleo/Drivers/STM32L0xx_HAL_Driver/Inc/stm32l0xx_hal_i2c_ex.h:
+
+C:/STM32Toolchain/Nucleo/Drivers/STM32L0xx_HAL_Driver/Inc/stm32l0xx_hal_lptim.h:
+
+C:/STM32Toolchain/Nucleo/Drivers/STM32L0xx_HAL_Driver/Inc/stm32l0xx_hal_lptim_ex.h:
 
 C:/STM32Toolchain/Nucleo/Drivers/STM32L0xx_HAL_Driver/Inc/stm32l0xx_hal_pwr.h:
 
@@ -150,3 +151,5 @@ C:/STM32Toolchain/Nucleo/Inc/rtc.h:
 C:/STM32Toolchain/Nucleo/Inc/co2.h:
 
 C:/STM32Toolchain/Nucleo/Inc/mbtask.h:
+
+C:/STM32Toolchain/Nucleo/Drivers/freemodbus/modbus/include/mbport.h:

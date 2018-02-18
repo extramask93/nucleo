@@ -35,7 +35,6 @@ static void PreparteLPUARTToStopMode() {
 }
 static void SystemPower_Config(void)
 {
-  GPIO_InitTypeDef GPIO_InitStructure;
   __HAL_RCC_PWR_CLK_ENABLE();
 
   /* Enable Ultra low power mode */
@@ -94,8 +93,9 @@ void StopMode() {
 	htim2.State = HAL_TIM_STATE_RESET;
 	htim6.State = HAL_TIM_STATE_RESET;
 	hi2c1.State   = HAL_I2C_STATE_RESET;
-	hadc.State    = HAL_ADC_STATE_RESET;
+	hadc.State= HAL_ADC_STATE_RESET;
 	hspi1.State = HAL_SPI_STATE_RESET;
+	MX_ADC_Init();
 	/*ENABLE MODBUS TIMER*/
 }
 

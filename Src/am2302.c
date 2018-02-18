@@ -83,17 +83,18 @@ int am2302_ReadData(TH_Data *result) {
 	HAL_Delay(1);//start -> data line for 1ms down
 	am2302_pinInput();
 	HAL_TIM_Base_Start(&htim21);
+	__disable_irq();
 	TIM21->CNT=0;//TIM2->CNT = 0;
-	while(HAL_GPIO_ReadPin(TMP_GPIO_Port,TMP_Pin)){ if(TIM21->CNT>500) return 1;}
+	while(HAL_GPIO_ReadPin(TMP_GPIO_Port,TMP_Pin)){ if(TIM21->CNT>500) {__enable_irq();return 1;}}
 	TIM21->CNT = 0;
-	while(!HAL_GPIO_ReadPin(TMP_GPIO_Port,TMP_Pin)){ if(TIM21->CNT>500) return 1;}
+	while(!HAL_GPIO_ReadPin(TMP_GPIO_Port,TMP_Pin)){ if(TIM21->CNT>500) {__enable_irq();return 1;}}
 	TIM21->CNT = 0;
-	while(HAL_GPIO_ReadPin(TMP_GPIO_Port,TMP_Pin)){ if(TIM21->CNT>500) return 1;}
+	while(HAL_GPIO_ReadPin(TMP_GPIO_Port,TMP_Pin)){ if(TIM21->CNT>500) {__enable_irq();return 1;}}
 	for(int i=0;i<40;i++) { //receieve 40 bits
 		TIM21->CNT = 0;
-		while(!HAL_GPIO_ReadPin(TMP_GPIO_Port,TMP_Pin)){ if(TIM21->CNT>500) return 1;}
+		while(!HAL_GPIO_ReadPin(TMP_GPIO_Port,TMP_Pin)){ if(TIM21->CNT>500) {__enable_irq();return 1;}}
 		uint32_t time = TIM21->CNT;
-		while(HAL_GPIO_ReadPin(TMP_GPIO_Port,TMP_Pin)){ if(TIM21->CNT>500) return 1;}
+		while(HAL_GPIO_ReadPin(TMP_GPIO_Port,TMP_Pin)){ if(TIM21->CNT>500){__enable_irq(); return 1;}}
 		if((TIM21->CNT- time) >30) {
 			am2302Data[currentByte] |= (1 << counter);
 		}
@@ -105,6 +106,7 @@ int am2302_ReadData(TH_Data *result) {
 			counter--;
 		}
 	}
+	__enable_irq();
 	if(am2302_checkParity())
 		return 1;
 	HAL_TIM_Base_Stop(&htim21);

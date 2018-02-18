@@ -13,6 +13,8 @@ enum ErrorType {
 };
 void CO2_Init();
 void CO2_DeInit();
+void CO2_TurnOn();
+void CO2_TurnOff();
 enum ErrorType CO2_GetConcentration(uint16_t *result);
 
 
