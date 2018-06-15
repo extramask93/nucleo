@@ -15,7 +15,6 @@ C_SRCS += \
 ../Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_gpio.c \
 ../Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_i2c.c \
 ../Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_i2c_ex.c \
-../Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_lptim.c \
 ../Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_pwr.c \
 ../Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_pwr_ex.c \
 ../Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_rcc.c \
@@ -40,7 +39,6 @@ OBJS += \
 ./Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_gpio.o \
 ./Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_i2c.o \
 ./Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_i2c_ex.o \
-./Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_lptim.o \
 ./Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_pwr.o \
 ./Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_pwr_ex.o \
 ./Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_rcc.o \
@@ -65,7 +63,6 @@ C_DEPS += \
 ./Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_gpio.d \
 ./Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_i2c.d \
 ./Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_i2c_ex.d \
-./Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_lptim.d \
 ./Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_pwr.d \
 ./Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_pwr_ex.d \
 ./Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_rcc.d \

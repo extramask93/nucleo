@@ -15,6 +15,7 @@
 struct LCD_att lcd;
 struct LCD_GPIO lcd_gpio;
 volatile int cnt =0;
+volatile int lcdcnt = 0;
 volatile int isOn =0;
 extern uint16_t downcounter;
 extern volatile bool STOPRequested;
@@ -22,31 +23,67 @@ extern volatile bool STOPRequested;
  * @brief Send information to the LCD using configured GPIOs
  * @param val: value to be sent
  */
+void stepBrightness(void) {
+	/*static uint16_t stepSize = 3;
+	uint16_t currentBright_pct,desiredBright_pct;
+
+    BV_Init();
+    BV_ReadData(&currentBright_pct);
+
+    if(curr > 60)
+    	desiredBright_pct = 0;
+    else {
+
+    }
+	// if current is at desired, don't do anything
+	if (currentBright_pct == desiredBright_pct)
+		return;
+	// is the current brightness above the desired brightness?
+	else if (currentBright_pct > desiredBright_pct) {
+		// is the difference between the two less than one step?
+		if ( (currentBright_pct-stepSize) < desiredBright_pct)
+			currentBright_pct = desiredBright_pct;
+		else
+			currentBright_pct -= stepSize;
+	} // else if
+	else if (currentBright_pct < desiredBright_pct) {
+		// is the difference between the two less than one step?
+		if ( (currentBright_pct+stepSize) > desiredBright_pct)
+			currentBright_pct = desiredBright_pct;
+		else
+			currentBright_pct += stepSize;
+	} // else if
+	 __HAL_TIM_SET_COMPARE(&htim22, TIM_CHANNEL_1, currentBright_pct);
+	return;*/
+} // stepBrightness
 static void LCD_AdjustBrightness()
 {
-    //fprintf(lcd, "adc: %d\n", (int)adc_read());
-    //fprintf(lcd, "bv: %d\n", (int)targetBrightness);
-
+	//HAL_ResumeTick();
+	uint16_t pwm;
     uint16_t lightVal=0;
     BV_Init();
     BV_ReadData(&lightVal);
-    //HAL_Delay(250);
     uint16_t percentage = 0;
     if(lightVal==0)
     	lightVal=1;
-    if(lightVal<1254)
-    	percentage = 9.9323*log2(lightVal)+27;
-    else
-    	percentage=100;
-    uint16_t pwm = (percentage-10);
+    if(lightVal<40) {
+    	pwm = 30;
+    }
+    else {
+    	percentage=1;
+    	pwm = 0;
+    }
     __HAL_TIM_SET_COMPARE(&htim22, TIM_CHANNEL_1, pwm);
 
 
 }
 static void LCD_Power_Down() {
+	LCD_clrScr();
 	LCD_write(LCD_DISPLAY_POWER_DOWN, LCD_COMMAND);
 }
 void LCD_Off() {
+	if(!isOn)
+		return;
 	isOn=0;
 	HAL_TIM_PWM_Stop(&htim22,TIM_CHANNEL_1);
 	HAL_TIM_Base_DeInit(&htim22);
@@ -55,9 +92,15 @@ void LCD_Off() {
 }
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 	if(htim->Instance == TIM2) {
-		if(isOn)
+		if(isOn) {
 			LCD_AdjustBrightness();
+			++lcdcnt;
+		}
 		cnt++;
+		if(lcdcnt >= 6) {
+			LCD_Off();
+			lcdcnt = 0;
+		}
 		if(cnt>=6) {
 			LCD_Off();
 			am2302_DeIninit();
@@ -106,7 +149,6 @@ void LCD_init(){
 	MX_TIM22_Init();
 	HAL_TIM_PWM_Start(&htim22, TIM_CHANNEL_1);
 	LCD_AdjustBrightness();
-	GPIO_InitTypeDef GPIO_InitStruct;
 	lcd_gpio.RSTPORT = LCD_PORT_RST;
 	lcd_gpio.RSTPIN = LCD_PIN_RST;
 	lcd_gpio.CEPORT = LCD_PORT_CE;
@@ -117,7 +159,7 @@ void LCD_init(){
 	HAL_GPIO_WritePin(GPIOB,GPIO_PIN_4,GPIO_PIN_RESET);
 	LCD_Reset();
 	LCD_write(0x21, LCD_COMMAND); //LCD extended commands.
-	LCD_write(0xC0, LCD_COMMAND); //set LCD Vop(Contrast).
+	LCD_write(0xB9, LCD_COMMAND); //set LCD Vop(Contrast).
 	LCD_write(0x04, LCD_COMMAND); //set temp coefficent.
 	LCD_write(0x14, LCD_COMMAND); //LCD bias mode 1:40.
 	LCD_write(0x20, LCD_COMMAND); //LCD basic commands.

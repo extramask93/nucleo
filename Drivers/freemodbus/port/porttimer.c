@@ -45,7 +45,6 @@ vMBPortTimersEnable(  )
 {
 	SystemClock_Config();
 	HAL_ResumeTick();
-	htim6.State = HAL_UART_STATE_RESET;
 	MX_TIM6_Init();
 	downcounter = timeout;
 	HAL_TIM_Base_Start_IT(&htim6);

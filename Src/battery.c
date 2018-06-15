@@ -8,7 +8,7 @@
 #include "adc.h"
 #include "mbtask.h"
 #include <math.h>
-#define BATTERY_CHANNEL ADC_CHANNEL_1
+#define BATTERY_CHANNEL ADC_CHANNEL_3
 #define VREF 3300
 #define SCLAING 1.16
 
@@ -28,7 +28,7 @@ void BatteryDeInit() {
 }
 uint32_t ReadBatteryValue() {
 	/*load raw value from dma buffer and calculate actual voltage*/
-	double temp = ((double)y[0])/ 4095 *3300;
+	double temp = ((double)y[1])/ 4095 *3300;
 	temp = (temp*4.2)/1.16;
 	return (uint32_t)round(temp);
 }

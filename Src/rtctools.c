@@ -7,7 +7,7 @@
 
 #include "rtctools.h"
 
-uint32_t DifferenceBetweenTimePeriod(RTC_TimeTypeDef *start, RTC_TimeTypeDef *stop)
+/*uint32_t DifferenceBetweenTimePeriod(RTC_TimeTypeDef *start, RTC_TimeTypeDef *stop)
 {
 	uint32_t tim1 = start->Seconds + start->Minutes*60 + start->Hours*3600;
 	uint32_t tim2 = stop->Seconds + stop->Minutes*60 + stop->Hours*3600;
@@ -36,4 +36,4 @@ void AddTime(RTC_TimeTypeDef *time2, uint8_t seconds)
 		time2->Hours -= 24;
 	}
 
-}
+}*/

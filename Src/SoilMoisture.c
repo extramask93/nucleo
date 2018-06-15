@@ -37,7 +37,7 @@ static uint32_t SoilMap(uint32_t value) {
 	return ((value * 100)/(*wet));
 }
 uint32_t ReadValue() {
-	uint32_t temp = y[1];
+	uint32_t temp = y[0];
 	temp = SoilMap(temp);
 	return temp;
 }
@@ -48,7 +48,7 @@ void SaveWetValue() {
 	HAL_ADC_Start_DMA(&hadc,y,2);
 	HAL_ADC_PollForConversion(&hadc,2000);
 	HAL_FLASHEx_DATAEEPROM_Unlock();
-	HAL_FLASHEx_DATAEEPROM_Program(FLASH_TYPEPROGRAMDATA_HALFWORD,0x0808000A,2200);
+	HAL_FLASHEx_DATAEEPROM_Program(FLASH_TYPEPROGRAMDATA_HALFWORD,0x0808000A,y[0]);
 	HAL_FLASHEx_DATAEEPROM_Lock();
 	lastCalibrated = WET;
 }
@@ -59,7 +59,7 @@ void SaveDryValue() {
 	HAL_ADC_Start_DMA(&hadc,y,2);
 	HAL_ADC_PollForConversion(&hadc,2000);
 	HAL_FLASHEx_DATAEEPROM_Unlock();
-	HAL_FLASHEx_DATAEEPROM_Program(FLASH_TYPEPROGRAMDATA_HALFWORD,0x0808000C,y[1]);
+	HAL_FLASHEx_DATAEEPROM_Program(FLASH_TYPEPROGRAMDATA_HALFWORD,0x0808000C,y[0]);
 	HAL_FLASHEx_DATAEEPROM_Lock();
 	lastCalibrated = DRY;
 }

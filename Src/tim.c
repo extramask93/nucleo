@@ -42,6 +42,7 @@
 
 /* USER CODE BEGIN 0 */
 extern volatile int cnt;
+extern volatile int lcdcnt;
 /* USER CODE END 0 */
 
 TIM_HandleTypeDef htim2;
@@ -191,7 +192,7 @@ void HAL_TIM_Base_MspInit(TIM_HandleTypeDef* tim_baseHandle)
     __HAL_RCC_TIM2_CLK_ENABLE();
 
     /* TIM2 interrupt Init */
-    HAL_NVIC_SetPriority(TIM2_IRQn, 0, 0);
+    HAL_NVIC_SetPriority(TIM2_IRQn, 2, 0);
     HAL_NVIC_EnableIRQ(TIM2_IRQn);
   /* USER CODE BEGIN TIM2_MspInit 1 */
 
@@ -206,7 +207,7 @@ void HAL_TIM_Base_MspInit(TIM_HandleTypeDef* tim_baseHandle)
     __HAL_RCC_TIM6_CLK_ENABLE();
 
     /* TIM6 interrupt Init */
-    HAL_NVIC_SetPriority(TIM6_DAC_IRQn, 3, 0);
+    HAL_NVIC_SetPriority(TIM6_DAC_IRQn, 2, 0);
     HAL_NVIC_EnableIRQ(TIM6_DAC_IRQn);
   /* USER CODE BEGIN TIM6_MspInit 1 */
 
@@ -232,7 +233,7 @@ void HAL_TIM_Base_MspInit(TIM_HandleTypeDef* tim_baseHandle)
     __HAL_RCC_TIM22_CLK_ENABLE();
 
     /* TIM22 interrupt Init */
-    HAL_NVIC_SetPriority(TIM22_IRQn, 3, 0);
+    HAL_NVIC_SetPriority(TIM22_IRQn, 2, 0);
     HAL_NVIC_EnableIRQ(TIM22_IRQn);
   /* USER CODE BEGIN TIM22_MspInit 1 */
 
@@ -330,11 +331,16 @@ void StartSTOPTimer() {
 		MX_TIM2_Init();
 		htim2.Instance->CNT=0;
 		cnt=0;
+		lcdcnt = 0;
 		HAL_TIM_Base_Start_IT(&htim2);
 	}
 }
 inline void ResetSTOPTimer() {
 	htim2.Instance->CNT=0;
+	cnt=0;
+}
+inline void ResetLCDTimer() {
+	lcdcnt = 0;
 	cnt=0;
 }
 

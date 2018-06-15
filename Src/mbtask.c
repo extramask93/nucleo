@@ -10,14 +10,12 @@
 #include "BV1750FVI.h"
 #include "usart.h"
 #include "tim.h"
-#include "rtc.h"
 #include "i2c.h"
 #include "adc.h"
 #include "spi.h"
 #include "gpio.h"
 #include "lcd.h"
 #include "dma.h"
-#include "rtc.h"
 #include "SoilMoisture.h"
 #include "battery.h"
 #include "power.h"
@@ -30,12 +28,9 @@
 
 extern Calibration_t lastCalibrated;
 static USHORT usRegInputStart = REG_INPUT_START;
-volatile USHORT usRegInputBuf[REG_INPUT_NREGS];
-volatile uint8_t coils[COIL_NREGS] = {0,0,0,0,0,1,1,1,1,1,1,1};
+USHORT usRegInputBuf[REG_INPUT_NREGS];
+volatile uint8_t coils[COIL_NREGS] = {1,1,1,1,1,1};
 volatile uint16_t y[2];
-RTC_TimeTypeDef lastMeasurementTime;
-RTC_DateTypeDef tempdate;
-volatile uint8_t printCoils[5] = {0,0,0,0,0};
 char bufferT[SCR_WIDTH];
 char bufferH[SCR_WIDTH];
 uint16_t timcnt = 0;
@@ -52,30 +47,27 @@ void ModbusRTUTask(void const * argument)
 {
 	eMBInit(MB_RTU, 1, 3, 9600, MB_PAR_NONE);
 	eMBEnable();
-	memset((void*)coils,0x1,5);
-	MeasureAll();
 	StopMode();
   while(1) {
+	/*Przetwarza elementy zakolejkowane w buforze Modbus*/
     eMBPoll();
+    /*Uruchamia sprzêtowy zegar, który po up³ywie x sekund przeniesie system w stan uœpienia*/
     StartSTOPTimer();
-    if(measurementRequested) {
-    	ResetSTOPTimer();
-    	MeasureAll();
-    	ReloadRTC();
-    	measurementRequested = false;
-    }
+    /*Obs³uga ¿¹dania wyœwietlenia pomiarów na wbudowanym ekranie*/
     if(lcdPrintRequested) {
-    	ResetSTOPTimer();
     	MeasureAndPrint();
-    	ReloadRTC();
-    	if(!printCoils[0] && !printCoils[1] && !printCoils[2] && !printCoils[3] && !printCoils[4])
-    		lcdPrintRequested=0;
+    	ResetSTOPTimer();
+    	ResetLCDTimer();
+    	lcdPrintRequested=0;
     }
+    /*Obs³uga ¿¹dania kalibracji cuzjnika wilgotnoœci gleby*/
     if(calibrationRequested) {
     	ReadCalibrationData();
     	ResetSTOPTimer();
+    	ResetLCDTimer();
     	calibrationRequested=false;
     }
+    /*Przejœcie w stan uspienia*/
     if(STOPRequested) {
     	STOPRequested = false;
     	StopMode();
@@ -86,12 +78,14 @@ void ModbusRTUTask(void const * argument)
 eMBErrorCode
 eMBRegInputCB( UCHAR * pucRegBuffer, USHORT usAddress, USHORT usNRegs )
 {
+	//LCD_init();
     eMBErrorCode    eStatus = MB_ENOERR;
     int             iRegIndex;
 
     if( ( usAddress >= REG_INPUT_START )
         && ( usAddress + usNRegs <= REG_INPUT_START + REG_INPUT_NREGS ) )
     {
+    	MeasureAll();
         iRegIndex = ( int )( usAddress - usRegInputStart );
         while( usNRegs > 0 )
         {
@@ -115,44 +109,7 @@ eMBErrorCode
 eMBRegHoldingCB( UCHAR * pucRegBuffer, USHORT usAddress, USHORT usNRegs,
                  eMBRegisterMode eMode )
 {
-	eMBErrorCode    eStatus = MB_ENOERR;
-	if(eMode==MB_REG_WRITE) {
-	    if( ( usAddress >= REG_HOLD_START )
-	        && ( usAddress + usNRegs <= REG_HOLD_START+ REG_HOLD_NREGS ))
-	    {
-	    	while(usNRegs>0) {
-	    	HAL_FLASHEx_DATAEEPROM_Unlock();
-	    	HAL_FLASHEx_DATAEEPROM_Erase(0x08080000);/*erase only available by word*/
-	    	unsigned int h = *pucRegBuffer++;
-	    	unsigned int l = *pucRegBuffer++;
-	    	unsigned int a = (h <<8) | (l&0xFF);
-	    	HAL_FLASHEx_DATAEEPROM_Program(FLASH_TYPEPROGRAMDATA_HALFWORD,0x08080000+(usAddress*4),a);
-	    	usAddress++;
-	    	usNRegs--;
-	    	}
-	    	HAL_FLASHEx_DATAEEPROM_Lock();
-	    }
-	    else
-	    	return MB_ENOREG;
-	}
-	if(eMode == MB_REG_READ) {
-	    if( ( usAddress >= REG_HOLD_START )
-	        && ( usAddress + usNRegs <= REG_HOLD_START+ REG_HOLD_NREGS ))
-	    {
-	    	uint32_t *mem = (uint32_t*)(0x08080000);
-	    	mem += usAddress;
-	    	while(usNRegs>0) {
-	    		*pucRegBuffer++ = (unsigned char)((*mem) >>8);
-	    		*pucRegBuffer++ = (unsigned char)((*mem) & 0xFF);
-	    		mem++;
-	    		usNRegs--;
-	    	}
-	    }
-	    else
-	    	return MB_ENOREG;
-	}
-
-    return eStatus;
+	return MB_ENOREG;
 }
 
 eMBErrorCode
@@ -181,7 +138,6 @@ eMBRegCoilsCB( UCHAR * pucRegBuffer, USHORT usAddress, USHORT usNCoils,
 				shift++;
 				usNCoils--;
 			}
-			measurementRequested=true;
 		}
 		else
 			return MB_ENOREG;
@@ -216,8 +172,6 @@ eMBRegDiscreteCB( UCHAR * pucRegBuffer, USHORT usAddress, USHORT usNDiscrete )
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 	if(GPIO_Pin == BTN_LCD_Pin) {	/*Show data on LCD*/
-		memset(printCoils,0x1,5);
-		memset(coils,0x1,5);
 		lcdPrintRequested = true;
 		cnt=0;
 	}
@@ -225,9 +179,6 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 		calibrationRequested =true;
 		cnt=0;
 	}
-}
-void HAL_RTCEx_WakeUpTimerEventCallback(RTC_HandleTypeDef *hrtc) {
-	measurementRequested = true;
 }
 void ReadCalibrationData() {
 	LCD_init();
@@ -242,94 +193,75 @@ void ReadCalibrationData() {
 	}
 }
 void MeasureAll() {
-    if(coils[0]) {
-    	MeasureTemperatureAndHumidity();
-    	coils[0]=0;
-    }
-    if(coils[1]) {
     	MeasureLight();
-    	coils[1]=0;
-    }
-    if(coils[2] || coils[3]) {
     	MeasureAnalogs();
-    }
-    if(coils[4]) {
-    	if(coils[11])
-    		MeasureCO2Level();
-    	else
-    		;//turn on co2 sensor and scheduele measurement
-    	coils[4]=0;
-    }
+    	MeasureCO2Level();
+    	MeasureTemperatureAndHumidity();
 }
 void MeasureAnalogs() {
 	SoilInit();
 	BatteryInit();
 	HAL_ADC_Start_DMA(&hadc,y,2);
-	HAL_ADC_PollForConversion(&hadc,2000);
-	HAL_ADC_Start_DMA(&hadc,y,2);
-	HAL_ADC_PollForConversion(&hadc,2000);
+	volatile HAL_StatusTypeDef res = HAL_ADC_PollForConversion(&hadc,2000);
+	res = HAL_ADC_Start_DMA(&hadc,y,2);
+	res = HAL_ADC_PollForConversion(&hadc,2000);
 	SoilDeInit();
 	BatteryDeInit();
 	usRegInputBuf[3] = ReadValue();
 	usRegInputBuf[4] = ReadBatteryValue();
-	coils[2] = 0;
-	coils[3] = 0;
 }
 void PrintAnalogs() {
-	if(printCoils[2]) {
-		memset(bufferT,' ',SCR_WIDTH);
-		LCD_print(bufferT,0,3);
-		sprintf(bufferT, "Soil: %i %%",usRegInputBuf[3]);
-		LCD_print(bufferT,0,3);
-		printCoils[2] = 0;
-	}
-	if(printCoils[3]) {
-		memset(bufferT,' ',SCR_WIDTH);
-		LCD_print(bufferT,0,4);
-		sprintf(bufferT, "Bat: %i mV",usRegInputBuf[4]);
-		LCD_print(bufferT,0,4);
-		printCoils[3] =0;
-	}
+	memset(bufferT,' ',SCR_WIDTH);
+	LCD_print(bufferT,0,3);
+	sprintf(bufferT, "Soil: %i %%",usRegInputBuf[3]);
+	LCD_print(bufferT,0,3);
+	memset(bufferT,' ',SCR_WIDTH);
+	LCD_print(bufferT,0,4);
+	sprintf(bufferT, "Bat: %i mV",usRegInputBuf[4]);
+	LCD_print(bufferT,0,4);
 }
 void MeasureAndPrint() {
+	static const char * disabled = "Disabled";
 	if(!isOn) {
 		LCD_init();
 		LCD_clrScr();
-		LCD_print("T: ...",0,0);
-		LCD_print("H: ...",0,1);
-		LCD_print("L: ...",0,2);
-		LCD_print("Soil: ...",0,3);
-		LCD_print("Battery: ...",0,4);
-		LCD_print("C02: ...",0,5);
+		LCD_print("T: ",0,0);
+		LCD_print("H: ",0,1);
+		LCD_print("L: ",0,2);
+		LCD_print("Soil: ",0,3);
+		LCD_print("Bat: ",0,4);
+		LCD_print("C02: ",0,5);
 	}
-	int errorcode=0;
-	if(coils[0]) {
-		errorcode = MeasureTemperatureAndHumidity();
-	}
-	if(!coils[0] && printCoils[0])
-		PrintTemperatureAndHumidity(errorcode);
+	if(!coils[0])
+		LCD_print(disabled,3,0);
+	if(!coils[1])
+		LCD_print(disabled,3,1);
+	PrintTemperatureAndHumidity(MeasureTemperatureAndHumidity());
 	ResetSTOPTimer();
+	if(!coils[2])
+		LCD_print(disabled,3,2);
 	PrintLightLevel(MeasureLight());
 	ResetSTOPTimer();
+	if(!coils[3])
+		LCD_print(disabled,6,3);
+	if(!coils[4])
+		LCD_print(disabled,4,4);
 	MeasureAnalogs();
 	PrintAnalogs();
+	if(!coils[5])
+		LCD_print(disabled,4,5);
 	PrintCO2Level(MeasureCO2Level());
 	ResetSTOPTimer();
 }
 int MeasureLight() {
-	if(!coils[1])
-		return 0;
-	if(!coils[6])
-		return 4;
-	BV_Init();
-	int a = BV_ReadData(&usRegInputBuf[2]);
-	BV_DeInit();
-	coils[1]=0;
+	int a = 0;
+	if(coils[2]) {
+		BV_Init();
+		a = BV_ReadData(&usRegInputBuf[2]);
+	}
 	return a;
 }
 void PrintLightLevel(int error) {
-	if(!printCoils[1])
-		return;
 	memset(bufferT,' ',SCR_WIDTH);
 	LCD_print(bufferT,0,2);
 	if(error)
@@ -337,24 +269,20 @@ void PrintLightLevel(int error) {
 	else
 		sprintf(bufferT, "L: %i lx",usRegInputBuf[2]);
 	LCD_print(bufferT,0,2);
-	printCoils[1] =0;
 }
 
 
 int MeasureCO2Level() {
-	if(!coils[4])
-		return 0;
-	if(!coils[9])
-		return 4;
-	CO2_Init();
-	int a = CO2_GetConcentration(&usRegInputBuf[5]);
-	CO2_DeInit();
-	coils[4]=0;
+	int a=0;
+	if(coils[5]) {
+		CO2_Init();//co2.Init();//CO2_Init();
+		a=CO2_GetConcentration(&usRegInputBuf[5]);
+		CO2_DeInit(); }
+	else
+		usRegInputBuf[5] = 0;
 	return a;
 }
 void PrintCO2Level(int error) {
-	if(!printCoils[4])
-		return;
 	memset(bufferT,' ',SCR_WIDTH);
 	LCD_print(bufferT,0,5);
 	if(error) {
@@ -363,44 +291,25 @@ void PrintCO2Level(int error) {
 	else
 		sprintf(bufferT,"CO2: %i ppm",usRegInputBuf[5]);
 	LCD_print(bufferT,0,5);
-	printCoils[4] =0;
 }
 
 int MeasureTemperatureAndHumidity() {
-	if(!coils[0])
-		return 0;
-	uint8_t trycount =0;
-	RTC_TimeTypeDef now={0};
-	HAL_RTC_GetTime(&hrtc,&now,RTC_FORMAT_BIN);
-	HAL_RTC_GetDate(&hrtc,&tempdate,RTC_FORMAT_BIN);
-	uint32_t diff = DifferenceBetweenTimePeriod(&lastMeasurementTime,&now);
-	if(diff>=3) {
-		HAL_RTC_GetTime(&hrtc,&lastMeasurementTime,RTC_FORMAT_BIN);
-		HAL_RTC_GetDate(&hrtc,&tempdate,RTC_FORMAT_BIN);
-		if(!coils[5])
-			return 4;
-		am2302_Init();
-		data=(const TH_Data){ 0 };
-		int result=0;
-		result = am2302_ReadData(&data);
-		if(!result) {
-			usRegInputBuf[0] = data.itemperature;
-			usRegInputBuf[1] = data.ihumidity;
-			trycount=0;
-			coils[0]=0;
-		}
-		else {
-			trycount++;
-			if(trycount>3){
-				trycount=0; coils[0]=0;
-			}
-		}
-		am2302_DeIninit();
-		return result;
+	am2302_Init();
+	data=(const TH_Data){ 0 };
+	int result=0;
+	result = am2302_ReadData(&data);
+	if(!result) {
+		usRegInputBuf[0] = coils[0] ?data.itemperature:0;
+		usRegInputBuf[1] = coils[1] ?data.ihumidity:0;
 	}
-	else
-		return 0;
+	else {
+		usRegInputBuf[0] = -1;
+		usRegInputBuf[1] = -1;
+	}
+	am2302_DeIninit();
+	return result;
 }
+
 void PrintTemperatureAndHumidity(int error) {
 	memset(bufferT,' ',SCR_WIDTH);
 	LCD_print(bufferT,0,1);
@@ -423,7 +332,6 @@ void PrintTemperatureAndHumidity(int error) {
 	}
 	LCD_print(bufferT,0,0);
 	LCD_print(bufferH,0,1);
-	printCoils[0] =0;
 }
 
 

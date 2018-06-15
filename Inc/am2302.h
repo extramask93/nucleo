@@ -16,6 +16,19 @@ typedef struct TH_Data {
 	float humidity;
 } TH_Data;
 
+typedef struct {
+	_Bool tempEnabled;
+	_Bool humEnabled;
+	int16_t temperature;
+	uint16_t humidity;
+	void (*Init)();
+	void (*DeInit)();
+	uint8_t (*GetReadings)();
+
+} AM2302_t;
+AM2302_t am2302;
+
+void initam2302();
 void am2302_Init();
 void am2302_DeInit();
 int am2302_ReadData(TH_Data *result);

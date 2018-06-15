@@ -14,7 +14,6 @@ C_SRCS += \
 ../Src/gpio.c \
 ../Src/i2c.c \
 ../Src/lcd.c \
-../Src/lptim.c \
 ../Src/main.c \
 ../Src/mbtask.c \
 ../Src/power.c \
@@ -38,7 +37,6 @@ OBJS += \
 ./Src/gpio.o \
 ./Src/i2c.o \
 ./Src/lcd.o \
-./Src/lptim.o \
 ./Src/main.o \
 ./Src/mbtask.o \
 ./Src/power.o \
@@ -62,7 +60,6 @@ C_DEPS += \
 ./Src/gpio.d \
 ./Src/i2c.d \
 ./Src/lcd.d \
-./Src/lptim.d \
 ./Src/main.d \
 ./Src/mbtask.d \
 ./Src/power.d \

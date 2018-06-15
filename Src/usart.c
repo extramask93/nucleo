@@ -105,10 +105,10 @@ void HAL_UART_MspInit(UART_HandleTypeDef* uartHandle)
   
     /**LPUART1 GPIO Configuration    
     PC4     ------> LPUART1_TX
-    PC5     ------> LPUART1_RX
-    PB1     ------> LPUART1_DE 
+    PB1     ------> LPUART1_DE
+    PB11     ------> LPUART1_RX 
     */
-    GPIO_InitStruct.Pin = GPIO_PIN_4|GPIO_PIN_5;
+    GPIO_InitStruct.Pin = GPIO_PIN_4;
     GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
     GPIO_InitStruct.Pull = GPIO_PULLUP;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
@@ -122,10 +122,18 @@ void HAL_UART_MspInit(UART_HandleTypeDef* uartHandle)
     GPIO_InitStruct.Alternate = GPIO_AF4_LPUART1;
     HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
+    GPIO_InitStruct.Pin = GPIO_PIN_11;
+    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+    GPIO_InitStruct.Pull = GPIO_PULLUP;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+    GPIO_InitStruct.Alternate = GPIO_AF4_LPUART1;
+    HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
     /* LPUART1 interrupt Init */
     HAL_NVIC_SetPriority(AES_RNG_LPUART1_IRQn, 0, 0);
     HAL_NVIC_EnableIRQ(AES_RNG_LPUART1_IRQn);
   /* USER CODE BEGIN LPUART1_MspInit 1 */
+
   /* USER CODE END LPUART1_MspInit 1 */
   }
   else if(uartHandle->Instance==USART1)
@@ -148,7 +156,7 @@ void HAL_UART_MspInit(UART_HandleTypeDef* uartHandle)
     HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
     /* USART1 interrupt Init */
-    HAL_NVIC_SetPriority(USART1_IRQn, 3, 0);
+    HAL_NVIC_SetPriority(USART1_IRQn, 2, 0);
     HAL_NVIC_EnableIRQ(USART1_IRQn);
   /* USER CODE BEGIN USART1_MspInit 1 */
   /* USER CODE END USART1_MspInit 1 */
@@ -168,12 +176,12 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef* uartHandle)
   
     /**LPUART1 GPIO Configuration    
     PC4     ------> LPUART1_TX
-    PC5     ------> LPUART1_RX
-    PB1     ------> LPUART1_DE 
+    PB1     ------> LPUART1_DE
+    PB11     ------> LPUART1_RX 
     */
-    HAL_GPIO_DeInit(GPIOC, GPIO_PIN_4|GPIO_PIN_5);
+    HAL_GPIO_DeInit(GPIOC, GPIO_PIN_4);
 
-    HAL_GPIO_DeInit(GPIOB, GPIO_PIN_1);
+    HAL_GPIO_DeInit(GPIOB, GPIO_PIN_1|GPIO_PIN_11);
 
     /* LPUART1 interrupt Deinit */
     HAL_NVIC_DisableIRQ(AES_RNG_LPUART1_IRQn);

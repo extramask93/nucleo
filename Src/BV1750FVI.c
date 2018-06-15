@@ -27,12 +27,16 @@ void BV_DeInit() {
 int BV_ReadData(volatile uint16_t *value) {
 	memset(buffer,0x0,2);
 	int result =0;
+	*value = 0;
 	result = HAL_I2C_Master_Receive(&hi2c1,BH1750FVI_ADDR,buffer,2,100);
 	if(result)
 		return result;
 	*value |= buffer[0] & 0xFF;
 	*value <<= 8;
 	*value |= buffer[1] & 0xFF;
+	if(*value == 65535)
+		*value -= 1;
+	HAL_Delay(180);
 	return result;
 }
 void HAL_I2C_MasterTxCpltCallback(I2C_HandleTypeDef *hi2c1) {

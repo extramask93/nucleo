@@ -46,34 +46,34 @@
 
 /* Private define ------------------------------------------------------------*/
 
-#define BTN_LCD_Pin GPIO_PIN_13
+#define BTN_LCD_Pin GPIO_PIN_0
 #define BTN_LCD_GPIO_Port GPIOC
-#define BTN_LCD_EXTI_IRQn EXTI4_15_IRQn
+#define BTN_LCD_EXTI_IRQn EXTI0_1_IRQn
 #define BTN_CAL_Pin GPIO_PIN_1
 #define BTN_CAL_GPIO_Port GPIOC
 #define BTN_CAL_EXTI_IRQn EXTI0_1_IRQn
-#define BTN_CAL_CO2_Pin GPIO_PIN_2
-#define BTN_CAL_CO2_GPIO_Port GPIOC
 #define SOIL_PWR_Pin GPIO_PIN_0
 #define SOIL_PWR_GPIO_Port GPIOA
+#define SOIL_Pin GPIO_PIN_1
+#define SOIL_GPIO_Port GPIOA
+#define BATTERY_Pin GPIO_PIN_3
+#define BATTERY_GPIO_Port GPIOA
 #define LD2_Pin GPIO_PIN_5
 #define LD2_GPIO_Port GPIOA
 #define LCD_DIN_Pin GPIO_PIN_7
 #define LCD_DIN_GPIO_Port GPIOA
 #define TMP_Pin GPIO_PIN_8
 #define TMP_GPIO_Port GPIOC
-#define CO2_PWR_Pin GPIO_PIN_8
-#define CO2_PWR_GPIO_Port GPIOA
+#define TMP_PWR_Pin GPIO_PIN_9
+#define TMP_PWR_GPIO_Port GPIOC
 #define CO2_TX_Pin GPIO_PIN_9
 #define CO2_TX_GPIO_Port GPIOA
 #define CO2_RX_Pin GPIO_PIN_10
 #define CO2_RX_GPIO_Port GPIOA
-#define CO2_HD_Pin GPIO_PIN_11
-#define CO2_HD_GPIO_Port GPIOA
-#define TMS_Pin GPIO_PIN_13
-#define TMS_GPIO_Port GPIOA
-#define TCK_Pin GPIO_PIN_14
-#define TCK_GPIO_Port GPIOA
+#define CO2_PWR_Pin GPIO_PIN_11
+#define CO2_PWR_GPIO_Port GPIOA
+#define LDO_EN_Pin GPIO_PIN_12
+#define LDO_EN_GPIO_Port GPIOA
 #define CHRG_STAT_Pin GPIO_PIN_15
 #define CHRG_STAT_GPIO_Port GPIOA
 #define LCD_RST_Pin GPIO_PIN_10

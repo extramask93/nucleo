@@ -35,6 +35,7 @@
 #define LCD_HEIGHT 48
 #define LCD_SIZE LCD_WIDTH * LCD_HEIGHT / 8
 extern volatile int isOn;
+extern volatile int lcdcnt;
 /*
  * @brief LCD parameters
  */

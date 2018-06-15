@@ -13,7 +13,6 @@
 #include "usart.h"
 #include "lcd.h"
 #include "mb.h"
-#include "rtc.h"
 #include "co2.h"
 #include "mbtask.h"
 #include "stm32l0xx_hal_uart.h"
@@ -47,7 +46,16 @@ static void SystemPower_Config(void)
   __HAL_RCC_WAKEUPSTOP_CLK_CONFIG(RCC_STOP_WAKEUPCLOCK_HSI);
   HAL_SuspendTick();
 }
-
+void FromStopMode() {
+	LPUART1->CR1 &= (~USART_CR1_UESM);
+	HAL_ResumeTick();
+	SystemClock_Config();
+	/*ENABLE BACK GPIO*/
+	//MX_GPIO_Init();
+	HAL_GPIO_WritePin(LD2_GPIO_Port,LD2_Pin,GPIO_PIN_SET);
+	/*CLEAR STATE OF PERIPHERALS TO TURN THEM BACK ON*/
+	MX_ADC_Init();
+}
 void StopMode() {
 	GPIO_InitTypeDef GPIO_InitStruct;
 	//MX_GPIO_DeInit();
@@ -62,40 +70,26 @@ void StopMode() {
 	GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
 	GPIO_InitStruct.Pull = GPIO_NOPULL;
 	HAL_GPIO_Init(BTN_CAL_GPIO_Port, &GPIO_InitStruct);
-	/*configure rtc timeout according to memory value*/
-	if(coils[10])
-		HAL_RTCEx_SetWakeUpTimer_IT(&hrtc, GetRTCTimFromEEPROM(), RTC_WAKEUPCLOCK_CK_SPRE_16BITS);
-	else
-		HAL_RTCEx_DeactivateWakeUpTimer(&hrtc);
-	/*DEINIT UNUSER PERPHERALS*/
+	//HAL_RTCEx_DeactivateWakeUpTimer(&hrtc);
+	/*DEINIT UNUSED PERPHERALS*/
 	HAL_ADC_DeInit(&hadc);
 	HAL_SPI_DeInit(&hspi1);
 	HAL_I2C_DeInit(&hi2c1);
 	HAL_TIM_Base_Stop_IT(&htim6);
 	HAL_TIM_Base_MspDeInit(&htim2);
 	HAL_TIM_Base_MspDeInit(&htim22);
-	HAL_TIM_Base_MspDeInit(&htim6);
 	HAL_TIM_Base_MspDeInit(&htim21);
-	CO2_DeInit();
-	HAL_GPIO_WritePin(LD2_GPIO_Port,LD2_Pin,GPIO_PIN_RESET);
-	PreparteLPUARTToStopMode();
-	SystemPower_Config();
-	HAL_PWR_EnterSTOPMode(PWR_LOWPOWERREGULATOR_ON, PWR_SLEEPENTRY_WFI);
-	LPUART1->CR1 &= (~USART_CR1_UESM);
-	SystemClock_Config();
-	HAL_ResumeTick();
-	/*ENABLE BACK GPIO*/
-	MX_GPIO_Init();
-	HAL_GPIO_WritePin(LD2_GPIO_Port,LD2_Pin,GPIO_PIN_SET);
-	/*CLEAR STATE OF PERIPHERALS TO TURN THEM BACK ON*/
 	htim22.State = HAL_TIM_STATE_RESET;
 	htim21.State = HAL_TIM_STATE_RESET;
 	htim2.State = HAL_TIM_STATE_RESET;
-	htim6.State = HAL_TIM_STATE_RESET;
 	hi2c1.State   = HAL_I2C_STATE_RESET;
 	hadc.State= HAL_ADC_STATE_RESET;
 	hspi1.State = HAL_SPI_STATE_RESET;
-	MX_ADC_Init();
+	CO2_DeInit();
+	PreparteLPUARTToStopMode();
+	SystemPower_Config();
+	HAL_PWR_EnterSTOPMode(PWR_LOWPOWERREGULATOR_ON, PWR_SLEEPENTRY_WFI);
+	FromStopMode();
 	/*ENABLE MODBUS TIMER*/
 }
 

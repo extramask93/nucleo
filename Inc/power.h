@@ -11,5 +11,6 @@
 void StopMode();
 uint16_t GetRTCTimFromEEPROM();
 uint16_t GetAddressFromEEPROM();
+void FromStopMode();
 
 #endif /* POWER_H_ */

@@ -2,6 +2,5 @@
 #define __rtctools_H
 #include <stdbool.h>
 #include <stdint.h>
-#include "rtc.h"
 
 #endif

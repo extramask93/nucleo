@@ -12,10 +12,18 @@
 #define MAX_RESPONSE_SIZE 9
 static const uint8_t tab[] = {0xFF, 0x01, 0x86, 0x00,0x00,0x00,0x00,0x00,0x79};
 uint8_t temp[10];
+static const char *disabledstr = "Disabled";
 typedef enum {
 	Ready, HeatingUp, Transmiting, WaitingForResponse, Error
 }CO2_State;
 volatile CO2_State CO2_state = Ready;
+void initco2() {
+	co2.enabled = 1;
+	co2.DeInit = CO2_DeInit;
+	co2.Init = CO2_Init;
+	co2.GetConcentration = CO2_GetConcentration;
+	co2.errorstr = NULL;
+}
 static uint8_t CO2_GetCheckSum(uint8_t * packet) {
 	uint8_t i,checksum;
 	for(i=1;i<8;i++) {
@@ -26,13 +34,9 @@ static uint8_t CO2_GetCheckSum(uint8_t * packet) {
 	return checksum;
 }
 void CO2_Init() {
-	CO2_TurnOn();
 	MX_USART1_UART_Init();
 }
 void CO2_DeInit() {
-	if(!coils[11]) {
-		CO2_TurnOff();
-	}
 	HAL_UART_MspDeInit(&huart1);
 	huart1.gState = HAL_UART_STATE_RESET;
 }

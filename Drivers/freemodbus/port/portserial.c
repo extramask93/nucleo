@@ -39,14 +39,15 @@ vMBPortSerialEnable( BOOL xRxEnable, BOOL xTxEnable )
      * transmitter empty interrupts.
      */
 	if (xRxEnable) {
-		HAL_GPIO_WritePin(GPIOA, DE_Pin, GPIO_PIN_RESET);
+
+		//HAL_GPIO_WritePin(GPIOA, DE_Pin, GPIO_PIN_RESET);
 		__HAL_UART_ENABLE_IT(&hlpuart1, UART_IT_RXNE);
 	} else {
 		__HAL_UART_DISABLE_IT(&hlpuart1, UART_IT_RXNE);
 	}
 
 	if (xTxEnable) {
-		HAL_GPIO_WritePin(GPIOA, DE_Pin, GPIO_PIN_SET);
+		//HAL_GPIO_WritePin(GPIOA, DE_Pin, GPIO_PIN_SET);
 		__HAL_UART_ENABLE_IT(&hlpuart1, UART_IT_TXE);
 	} else {
 		__HAL_UART_DISABLE_IT(&hlpuart1, UART_IT_TXE);
@@ -75,6 +76,7 @@ xMBPortSerialGetByte( CHAR * pucByte )
      * by the protocol stack after pxMBFrameCBByteReceived( ) has been called.
      */
 	 *pucByte = (uint8_t)(hlpuart1.Instance->RDR & (uint8_t)0x00FF); return TRUE;
+	 LPUART1->CR1 &= (~USART_CR1_UESM);
 }
 
 /* Create an interrupt handler for the transmit buffer empty interrupt

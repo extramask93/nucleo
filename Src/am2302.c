@@ -13,7 +13,13 @@
 
 uint8_t am2302Data[5];
 volatile int timeOutFlag;
-
+void initam2302() {
+	am2302.DeInit = am2302_DeInit;
+	//am2302.Init = am2302_Init();
+	am2302.GetReadings = am2302_ReadData;
+	am2302.tempEnabled = 1;
+	am2302.humEnabled = 1;
+}
 static void am2302_pinOut() {
 	  GPIO_InitTypeDef GPIO_InitStruct;
 	  /*Configure GPIO pin Output Level */
@@ -71,6 +77,7 @@ void am2302_Init() {
 void am2302_DeIninit() {
 	HAL_TIM_Base_MspDeInit(&htim21);//HAL_TIM_Base_MspDeInit(&htim2);
 	htim21.State = HAL_TIM_STATE_RESET;
+	am2302_pinOut();
 	//HAL_GPIO_DeInit(TMP_GPIO_Port, TMP_Pin);
 }
 int am2302_ReadData(TH_Data *result) {
@@ -80,21 +87,21 @@ int am2302_ReadData(TH_Data *result) {
 	int counter = 7;
 	am2302_pinOut();
 	HAL_GPIO_WritePin(TMP_GPIO_Port,TMP_Pin,GPIO_PIN_RESET);
-	HAL_Delay(1);//start -> data line for 1ms down
+	HAL_Delay(2);//start -> data line for 1ms down
 	am2302_pinInput();
-	HAL_TIM_Base_Start(&htim21);
 	__disable_irq();
 	TIM21->CNT=0;//TIM2->CNT = 0;
+	HAL_TIM_Base_Start(&htim21);
 	while(HAL_GPIO_ReadPin(TMP_GPIO_Port,TMP_Pin)){ if(TIM21->CNT>500) {__enable_irq();return 1;}}
 	TIM21->CNT = 0;
-	while(!HAL_GPIO_ReadPin(TMP_GPIO_Port,TMP_Pin)){ if(TIM21->CNT>500) {__enable_irq();return 1;}}
+	while(!HAL_GPIO_ReadPin(TMP_GPIO_Port,TMP_Pin)){ if(TIM21->CNT>500) {__enable_irq();return 2;}}
 	TIM21->CNT = 0;
-	while(HAL_GPIO_ReadPin(TMP_GPIO_Port,TMP_Pin)){ if(TIM21->CNT>500) {__enable_irq();return 1;}}
+	while(HAL_GPIO_ReadPin(TMP_GPIO_Port,TMP_Pin)){ if(TIM21->CNT>500) {__enable_irq();return 3;}}
 	for(int i=0;i<40;i++) { //receieve 40 bits
 		TIM21->CNT = 0;
-		while(!HAL_GPIO_ReadPin(TMP_GPIO_Port,TMP_Pin)){ if(TIM21->CNT>500) {__enable_irq();return 1;}}
+		while(!HAL_GPIO_ReadPin(TMP_GPIO_Port,TMP_Pin)){ if(TIM21->CNT>500) {__enable_irq();return 4;}}
 		uint32_t time = TIM21->CNT;
-		while(HAL_GPIO_ReadPin(TMP_GPIO_Port,TMP_Pin)){ if(TIM21->CNT>500){__enable_irq(); return 1;}}
+		while(HAL_GPIO_ReadPin(TMP_GPIO_Port,TMP_Pin)){ if(TIM21->CNT>500){__enable_irq(); return 5;}}
 		if((TIM21->CNT- time) >30) {
 			am2302Data[currentByte] |= (1 << counter);
 		}
@@ -108,7 +115,7 @@ int am2302_ReadData(TH_Data *result) {
 	}
 	__enable_irq();
 	if(am2302_checkParity())
-		return 1;
+		return 6;
 	HAL_TIM_Base_Stop(&htim21);
 	am2302_getTemperature(result);
 	am2302_getHumidity(result);
