@@ -10,6 +10,7 @@
 #include <stdint.h>
 
 void BatteryInit();
+void BatteryDeInit();
 uint32_t ReadBatteryValue();
 
 #endif /* SOILMOISTURE_H_ */

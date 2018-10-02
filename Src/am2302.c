@@ -71,11 +71,12 @@ static int am2302_checkParity() {
 	return 0;
 }
 void am2302_Init() {
+	HAL_Delay(100);
 	MX_TIM21_Init();//MX_TIM2_Init();
 	am2302_pinOut();
 }
 void am2302_DeIninit() {
-	HAL_TIM_Base_MspDeInit(&htim21);//HAL_TIM_Base_MspDeInit(&htim2);
+	HAL_TIM_Base_MspDeInit(&htim21);
 	htim21.State = HAL_TIM_STATE_RESET;
 	am2302_pinOut();
 	//HAL_GPIO_DeInit(TMP_GPIO_Port, TMP_Pin);
@@ -90,7 +91,7 @@ int am2302_ReadData(TH_Data *result) {
 	HAL_Delay(2);//start -> data line for 1ms down
 	am2302_pinInput();
 	__disable_irq();
-	TIM21->CNT=0;//TIM2->CNT = 0;
+	TIM21->CNT=0;
 	HAL_TIM_Base_Start(&htim21);
 	while(HAL_GPIO_ReadPin(TMP_GPIO_Port,TMP_Pin)){ if(TIM21->CNT>500) {__enable_irq();return 1;}}
 	TIM21->CNT = 0;

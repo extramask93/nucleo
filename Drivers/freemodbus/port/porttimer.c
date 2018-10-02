@@ -43,7 +43,6 @@ xMBPortTimersInit( USHORT usTim1Timerout50us )
 inline void
 vMBPortTimersEnable(  )
 {
-	SystemClock_Config();
 	HAL_ResumeTick();
 	MX_TIM6_Init();
 	downcounter = timeout;

@@ -23,11 +23,11 @@ typedef struct {
 	uint16_t humidity;
 	void (*Init)();
 	void (*DeInit)();
-	uint8_t (*GetReadings)();
+	int (*GetReadings)(TH_Data *result);
 
 } AM2302_t;
 AM2302_t am2302;
-
+void am2302_DeIninit();
 void initam2302();
 void am2302_Init();
 void am2302_DeInit();

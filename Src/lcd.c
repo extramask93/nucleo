@@ -9,8 +9,11 @@
 #include "gpio.h"
 #include <stdint.h>
 #include "port.h"
+#include "BV1750FVI.h"
 #include "mb.h"
+#include "am2302.h"
 #include "tim.h"
+#include "mbtask.h"
 #include "mbport.h"
 struct LCD_att lcd;
 struct LCD_GPIO lcd_gpio;
@@ -63,14 +66,12 @@ static void LCD_AdjustBrightness()
     uint16_t lightVal=0;
     BV_Init();
     BV_ReadData(&lightVal);
-    uint16_t percentage = 0;
     if(lightVal==0)
     	lightVal=1;
     if(lightVal<40) {
     	pwm = 30;
     }
     else {
-    	percentage=1;
     	pwm = 0;
     }
     __HAL_TIM_SET_COMPARE(&htim22, TIM_CHANNEL_1, pwm);
@@ -85,10 +86,10 @@ void LCD_Off() {
 	if(!isOn)
 		return;
 	isOn=0;
+	minutes = 0;
 	HAL_TIM_PWM_Stop(&htim22,TIM_CHANNEL_1);
 	HAL_TIM_Base_DeInit(&htim22);
 	LCD_Power_Down();
-	HAL_SPI_MspDeInit(&hspi1);
 }
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 	if(htim->Instance == TIM2) {
@@ -145,6 +146,8 @@ void LCD_write(uint8_t data, uint8_t mode){
  * @brief Initialize the LCD using predetermined values
  */
 void LCD_init(){
+	if(isOn)
+		return;
 	isOn=1;
 	MX_TIM22_Init();
 	HAL_TIM_PWM_Start(&htim22, TIM_CHANNEL_1);

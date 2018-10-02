@@ -113,6 +113,7 @@ int main(void)
 
   /* USER CODE BEGIN 2 */
   BV_Init();
+  HAL_GPIO_WritePin(TMP_PWR_GPIO_Port,TMP_PWR_Pin,GPIO_PIN_RESET);
   /* USER CODE END 2 */
 
   /* Infinite loop */

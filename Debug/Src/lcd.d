@@ -36,10 +36,12 @@ Src/lcd.o: ../Src/lcd.c C:/STM32Toolchain/Nucleo/Inc/lcd.h \
  C:/STM32Toolchain/Nucleo/Drivers/STM32L0xx_HAL_Driver/Inc/stm32l0xx_hal_uart_ex.h \
  C:/STM32Toolchain/Nucleo/Inc/spi.h C:/STM32Toolchain/Nucleo/Inc/gpio.h \
  C:/STM32Toolchain/Nucleo/Drivers/freemodbus/port/port.h \
+ C:/STM32Toolchain/Nucleo/Inc/BV1750FVI.h \
  C:/STM32Toolchain/Nucleo/Drivers/freemodbus/modbus/include/mb.h \
  C:/STM32Toolchain/Nucleo/Drivers/freemodbus/modbus/include/mbport.h \
  C:/STM32Toolchain/Nucleo/Drivers/freemodbus/modbus/include/mbproto.h \
- C:/STM32Toolchain/Nucleo/Inc/tim.h \
+ C:/STM32Toolchain/Nucleo/Inc/am2302.h C:/STM32Toolchain/Nucleo/Inc/tim.h \
+ C:/STM32Toolchain/Nucleo/Inc/mbtask.h \
  C:/STM32Toolchain/Nucleo/Drivers/freemodbus/modbus/include/mbport.h
 
 C:/STM32Toolchain/Nucleo/Inc/lcd.h:
@@ -120,12 +122,18 @@ C:/STM32Toolchain/Nucleo/Inc/gpio.h:
 
 C:/STM32Toolchain/Nucleo/Drivers/freemodbus/port/port.h:
 
+C:/STM32Toolchain/Nucleo/Inc/BV1750FVI.h:
+
 C:/STM32Toolchain/Nucleo/Drivers/freemodbus/modbus/include/mb.h:
 
 C:/STM32Toolchain/Nucleo/Drivers/freemodbus/modbus/include/mbport.h:
 
 C:/STM32Toolchain/Nucleo/Drivers/freemodbus/modbus/include/mbproto.h:
 
+C:/STM32Toolchain/Nucleo/Inc/am2302.h:
+
 C:/STM32Toolchain/Nucleo/Inc/tim.h:
+
+C:/STM32Toolchain/Nucleo/Inc/mbtask.h:
 
 C:/STM32Toolchain/Nucleo/Drivers/freemodbus/modbus/include/mbport.h:

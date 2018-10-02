@@ -30,7 +30,6 @@
 /* ----------------------- static functions ---------------------------------*/
 static void prvvUARTTxReadyISR( void );
 static void prvvUARTRxISR( void );
-static uint16_t DE_Pin = GPIO_PIN_8;
 /* ----------------------- Start implementation -----------------------------*/
 void
 vMBPortSerialEnable( BOOL xRxEnable, BOOL xTxEnable )
@@ -66,6 +65,7 @@ xMBPortSerialPutByte( CHAR ucByte )
     /* Put a byte in the UARTs transmit buffer. This function is called
      * by the protocol stack if pxMBFrameCBTransmitterEmpty( ) has been
      * called. */
+	HAL_ResumeTick();
 	return (HAL_OK == HAL_UART_Transmit(&hlpuart1, (uint8_t*)&ucByte, 1, 10));
 }
 

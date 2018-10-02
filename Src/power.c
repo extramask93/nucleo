@@ -35,32 +35,20 @@ static void PreparteLPUARTToStopMode() {
 static void SystemPower_Config(void)
 {
   __HAL_RCC_PWR_CLK_ENABLE();
-
   /* Enable Ultra low power mode */
   HAL_PWREx_EnableUltraLowPower();
-
   /* Enable the fast wake up from Ultra low power mode */
   HAL_PWREx_EnableFastWakeUp();
-
   /* Select HSI as system clock source after Wake Up from Stop mode */
   __HAL_RCC_WAKEUPSTOP_CLK_CONFIG(RCC_STOP_WAKEUPCLOCK_HSI);
   HAL_SuspendTick();
 }
 void FromStopMode() {
 	LPUART1->CR1 &= (~USART_CR1_UESM);
-	HAL_ResumeTick();
-	SystemClock_Config();
-	/*ENABLE BACK GPIO*/
-	//MX_GPIO_Init();
-	HAL_GPIO_WritePin(LD2_GPIO_Port,LD2_Pin,GPIO_PIN_SET);
-	/*CLEAR STATE OF PERIPHERALS TO TURN THEM BACK ON*/
 	MX_ADC_Init();
 }
 void StopMode() {
 	GPIO_InitTypeDef GPIO_InitStruct;
-	//MX_GPIO_DeInit();
-	__HAL_RCC_GPIOC_CLK_ENABLE();
-	__HAL_RCC_GPIOA_CLK_ENABLE();
 	GPIO_InitStruct.Pin = BTN_LCD_Pin;
 	GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
 	GPIO_InitStruct.Pull = GPIO_NOPULL;
@@ -69,8 +57,7 @@ void StopMode() {
 	GPIO_InitStruct.Pin = BTN_CAL_Pin;
 	GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
 	GPIO_InitStruct.Pull = GPIO_NOPULL;
-	HAL_GPIO_Init(BTN_CAL_GPIO_Port, &GPIO_InitStruct);
-	//HAL_RTCEx_DeactivateWakeUpTimer(&hrtc);
+	HAL_GPIO_Init(BTN_CAL_GPIO_Port, &GPIO_InitStruct);;
 	/*DEINIT UNUSED PERPHERALS*/
 	HAL_ADC_DeInit(&hadc);
 	HAL_SPI_DeInit(&hspi1);
@@ -89,6 +76,7 @@ void StopMode() {
 	PreparteLPUARTToStopMode();
 	SystemPower_Config();
 	HAL_PWR_EnterSTOPMode(PWR_LOWPOWERREGULATOR_ON, PWR_SLEEPENTRY_WFI);
+	HAL_ResumeTick();
 	FromStopMode();
 	/*ENABLE MODBUS TIMER*/
 }

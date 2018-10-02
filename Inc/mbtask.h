@@ -18,7 +18,8 @@
 #define SCR_WIDTH 14
 extern volatile uint8_t coils[COIL_NREGS];
 
-extern volatile uint16_t y[2];
+extern uint16_t y[2];
+extern volatile int minutes;
 extern USHORT usRegInputBuf[REG_INPUT_NREGS];
 
 extern char bufferT[SCR_WIDTH];

@@ -12,6 +12,7 @@ typedef enum {
 	WET,DRY
 } Calibration_t;
 void SoilInit();
+void SoilDeInit();
 void SaveWetValue();
 void SaveDryValue();
 uint32_t ReadValue();

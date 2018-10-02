@@ -10,22 +10,12 @@
 #include "mbtask.h"
 #include "stm32l0xx_hal_uart.h"
 #define MAX_RESPONSE_SIZE 9
-static const uint8_t tab[] = {0xFF, 0x01, 0x86, 0x00,0x00,0x00,0x00,0x00,0x79};
+static uint8_t tab[] = {0xFF, 0x01, 0x86, 0x00,0x00,0x00,0x00,0x00,0x79};
 uint8_t temp[10];
-static const char *disabledstr = "Disabled";
-typedef enum {
-	Ready, HeatingUp, Transmiting, WaitingForResponse, Error
-}CO2_State;
-volatile CO2_State CO2_state = Ready;
-void initco2() {
-	co2.enabled = 1;
-	co2.DeInit = CO2_DeInit;
-	co2.Init = CO2_Init;
-	co2.GetConcentration = CO2_GetConcentration;
-	co2.errorstr = NULL;
-}
+
 static uint8_t CO2_GetCheckSum(uint8_t * packet) {
 	uint8_t i,checksum;
+	checksum =0;
 	for(i=1;i<8;i++) {
 		checksum += packet[i];
 	}
@@ -43,34 +33,16 @@ void CO2_DeInit() {
 enum ErrorType CO2_GetConcentration(uint16_t *result) {
 	if(HAL_UART_Transmit(&huart1,tab,sizeof(tab),100))
 		return CO2_TRERROR;
-	HAL_UART_Transmit_IT(&huart1,tab,sizeof(tab));
-	if(HAL_UART_Receive(&huart1,temp,9,1000))
+	if(HAL_UART_Receive(&huart1,temp,9,100))
 		return CO2_REERROR;
 	if(CO2_GetCheckSum(temp)!= temp[8])
 		return CO2_CHERROR;
 	*result = temp[2]*256 + temp[3];
 	return CO2_OK;
 }
-void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
-	if(CO2_GetCheckSum(temp)!= temp[8])
-		CO2_state = Error;
-	else {
-		usRegInputBuf[5] = temp[2]*256 + temp[3];
-		CO2_state = Ready;
-	}
-	coils[4]=0;
-}
-void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart) {
-	HAL_UART_Receive_IT(&huart,temp,9);
-	CO2_state = WaitingForResponse;
-}
-void  HAL_UART_ErrorCallback(UART_HandleTypeDef *huart) {
-	//error
-}
 inline void CO2_TurnOn() {
-	HAL_GPIO_WritePin(CO2_PWR_GPIO_Port,CO2_PWR_Pin,GPIO_PIN_SET);
+	HAL_GPIO_WritePin(CO2_PWR_GPIO_Port,CO2_PWR_Pin,GPIO_PIN_RESET);
 }
 inline void CO2_TurnOff() {
-	if(!coils[11])
-		HAL_GPIO_WritePin(CO2_PWR_GPIO_Port,CO2_PWR_Pin,GPIO_PIN_RESET);
+	HAL_GPIO_WritePin(CO2_PWR_GPIO_Port,CO2_PWR_Pin,GPIO_PIN_SET);
 }

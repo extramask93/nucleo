@@ -47,7 +47,8 @@ Src/mbtask.o: ../Src/mbtask.c C:/STM32Toolchain/Nucleo/Inc/mbtask.h \
  C:/STM32Toolchain/Nucleo/Inc/dma.h \
  C:/STM32Toolchain/Nucleo/Inc/SoilMoisture.h \
  C:/STM32Toolchain/Nucleo/Inc/battery.h \
- C:/STM32Toolchain/Nucleo/Inc/power.h C:/STM32Toolchain/Nucleo/Inc/co2.h
+ C:/STM32Toolchain/Nucleo/Inc/power.h C:/STM32Toolchain/Nucleo/Inc/co2.h \
+ C:/STM32Toolchain/Nucleo/Inc/rtc.h
 
 C:/STM32Toolchain/Nucleo/Inc/mbtask.h:
 
@@ -158,3 +159,5 @@ C:/STM32Toolchain/Nucleo/Inc/battery.h:
 C:/STM32Toolchain/Nucleo/Inc/power.h:
 
 C:/STM32Toolchain/Nucleo/Inc/co2.h:
+
+C:/STM32Toolchain/Nucleo/Inc/rtc.h:

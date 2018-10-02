@@ -39,12 +39,4 @@ int BV_ReadData(volatile uint16_t *value) {
 	HAL_Delay(180);
 	return result;
 }
-void HAL_I2C_MasterTxCpltCallback(I2C_HandleTypeDef *hi2c1) {
-
-}
-void HAL_I2C_MasterRxCpltCallback(I2C_HandleTypeDef *hi2c) {
-
-}
-void HAL_I2C_ErrorCallback(I2C_HandleTypeDef *hi2c) {
-}
 
